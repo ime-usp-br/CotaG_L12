@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cebbd8ae7a5039db3405bd7bcd909142",
+    "content-hash": "b9d8415644dcdce0e82f2ecd4e777d4e",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -10729,16 +10729,16 @@
         },
         {
             "name": "uspdev/replicado",
-            "version": "1.25.4",
+            "version": "1.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/uspdev/replicado.git",
-                "reference": "6158c2243a82eeb4bd19bbff4fc4bec3939bd44b"
+                "reference": "a3af7842103657b1af3f0880a3fcece3686e9089"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uspdev/replicado/zipball/6158c2243a82eeb4bd19bbff4fc4bec3939bd44b",
-                "reference": "6158c2243a82eeb4bd19bbff4fc4bec3939bd44b",
+                "url": "https://api.github.com/repos/uspdev/replicado/zipball/a3af7842103657b1af3f0880a3fcece3686e9089",
+                "reference": "a3af7842103657b1af3f0880a3fcece3686e9089",
                 "shasum": ""
             },
             "require": {
@@ -10772,22 +10772,22 @@
             "homepage": "https://github.com/uspdev/replicado",
             "support": {
                 "issues": "https://github.com/uspdev/replicado/issues",
-                "source": "https://github.com/uspdev/replicado/tree/1.25.4"
+                "source": "https://github.com/uspdev/replicado/tree/1.26.0"
             },
-            "time": "2025-04-09T14:36:59+00:00"
+            "time": "2025-08-13T20:41:20+00:00"
         },
         {
             "name": "uspdev/senhaunica-socialite",
-            "version": "7.3.19",
+            "version": "4.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/uspdev/senhaunica-socialite.git",
-                "reference": "f4db8f92dd26d3c718ae8a8804e10407b2505891"
+                "reference": "1e1ee4585a3984b70ecd88ec01ce7667447f6eef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uspdev/senhaunica-socialite/zipball/f4db8f92dd26d3c718ae8a8804e10407b2505891",
-                "reference": "f4db8f92dd26d3c718ae8a8804e10407b2505891",
+                "url": "https://api.github.com/repos/uspdev/senhaunica-socialite/zipball/1e1ee4585a3984b70ecd88ec01ce7667447f6eef",
+                "reference": "1e1ee4585a3984b70ecd88ec01ce7667447f6eef",
                 "shasum": ""
             },
             "require": {
@@ -10829,9 +10829,9 @@
             "homepage": "https://github.com/uspdev/senhaunica-socialite",
             "support": {
                 "issues": "https://github.com/uspdev/senhaunica-socialite/issues",
-                "source": "https://github.com/uspdev/senhaunica-socialite/tree/7.3.19"
+                "source": "https://github.com/uspdev/senhaunica-socialite/tree/4.5.2"
             },
-            "time": "2025-04-08T14:01:14+00:00"
+            "time": "2025-09-19T11:29:55+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
