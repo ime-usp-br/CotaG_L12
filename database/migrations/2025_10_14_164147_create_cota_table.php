@@ -15,10 +15,6 @@ return new class extends Migration
             $table->id();
             $table->integer('valor');
             $table->string('vinculo');
-            $table->foreign('vinculo')
-                  ->references('vinculo')
-                  ->on('vinculo')
-                  ->onDelete('cascade');
             $table->timestamps();
         });
     }
