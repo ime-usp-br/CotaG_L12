@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('lancamento', function (Blueprint $table) {
             $table->id();
             $table->dateTime('data');
-            $table->integer('tipoLancamento');
+            $table->integer('tipoLancamento'); // (0 = Crédito e 1 = Débito)
             $table->integer('valor');
             $table->integer('pessoa_codpes');
             $table->foreign('pessoa_codpes')
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('usuario_id');
             $table->foreign('usuario_id')
                   ->references('id')
-                  ->on('usuario')
+                  ->on('users')
                   ->onDelete('cascade');  
             $table->timestamps();
         });

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vinculo', function (Blueprint $table) {
-            $table->integer('codpes')->primary();
+            $table->integer('codpes');
             $table->foreign('codpes')
                   ->references('codpes')
                   ->on('pessoa')
