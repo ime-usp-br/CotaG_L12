@@ -18,6 +18,7 @@ return new class extends Migration
                   ->on('pessoa')
                   ->onDelete('cascade');
             $table->string('vinculo');
+            $table->primary(['codpes', 'vinculo']);
             $table->timestamps();
         });
     }
