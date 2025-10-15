@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pessoa', function (Blueprint $table) {
-            $table->integer('codpes')->primary();
-            $table->string('nompes');
+        Schema::create('cotas', function (Blueprint $table) {
+            $table->id();
+            $table->integer('valor');
+            $table->string('tipo_vinculo');
             $table->timestamps();
         });
     }
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pessoa');
+        Schema::dropIfExists('cotas');
     }
 };

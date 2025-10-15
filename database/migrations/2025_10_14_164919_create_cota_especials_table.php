@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cota', function (Blueprint $table) {
+        Schema::create('cota_especials', function (Blueprint $table) {
             $table->id();
+            $table->integer('codigo_pessoa');
+            $table->foreign('codigo_pessoa')
+                  ->references('codigo_pessoa')
+                  ->on('pessoas')
+                  ->onDelete('cascade');
             $table->integer('valor');
-            $table->string('vinculo');
             $table->timestamps();
         });
     }
@@ -24,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cota');
+        Schema::dropIfExists('cota_especials');
     }
 };

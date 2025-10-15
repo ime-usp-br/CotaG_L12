@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cota_especial', function (Blueprint $table) {
-            $table->id();
-            $table->integer('codpes');
-            $table->foreign('codpes')
-                  ->references('codpes')
-                  ->on('pessoa')
-                  ->onDelete('cascade');
-            $table->integer('valor');
+        Schema::create('pessoas', function (Blueprint $table) {
+            $table->integer('codigo_pessoa')->primary();
+            $table->string('nome_pessoa');
             $table->timestamps();
         });
     }
@@ -28,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cota_especial');
+        Schema::dropIfExists('pessoas');
     }
 };
