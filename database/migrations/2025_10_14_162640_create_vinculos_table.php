@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vinculo', function (Blueprint $table) {
-            $table->integer('codpes');
-            $table->foreign('codpes')
-                  ->references('codpes')
-                  ->on('pessoa')
+        Schema::create('vinculos', function (Blueprint $table) {
+            $table->integer('codigo_pessoa');
+            $table->foreign('codigo_pessoa')
+                  ->references('codigo_pessoa')
+                  ->on('pessoas')
                   ->onDelete('cascade');
-            $table->string('vinculo');
-            $table->primary(['codpes', 'vinculo']);
+            $table->string('tipo_vinculo');
+            $table->primary(['codigo_pessoa', 'tipo_vinculo']);
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vinculo');
+        Schema::dropIfExists('vinculos');
     }
 };

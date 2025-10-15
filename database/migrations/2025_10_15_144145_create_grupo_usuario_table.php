@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('usuario_grupo', function (Blueprint $table) {
+        Schema::create('grupo_usuario', function (Blueprint $table) {
             $table->integer('usuario_id');
             $table->foreign('usuario_id')
                   ->references('id')
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('grupo_id');
             $table->foreign('grupo_id')
                   ->references('id')
-                  ->on('grupo')
+                  ->on('grupos')
                   ->onDelete('cascade');
             $table->primary(['usuario_id','grupo_id']);
             $table->timestamps();
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('usuario_grupo');
+        Schema::dropIfExists('grupo_usuario');
     }
 };

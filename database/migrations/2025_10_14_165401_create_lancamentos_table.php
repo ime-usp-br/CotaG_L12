@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lancamento', function (Blueprint $table) {
+        Schema::create('lancamentos', function (Blueprint $table) {
             $table->id();
             $table->dateTime('data');
-            $table->integer('tipoLancamento'); // (0 = Crédito e 1 = Débito)
+            $table->integer('tipo_lancamento'); // (0 = Crédito e 1 = Débito)
             $table->integer('valor');
-            $table->integer('pessoa_codpes');
-            $table->foreign('pessoa_codpes')
-                  ->references('codpes')
-                  ->on('pessoa')
+            $table->integer('codigo_pessoa');
+            $table->foreign('codigo_pessoa')
+                  ->references('codigo_pessoa')
+                  ->on('pessoas')
                   ->onDelete('cascade');
             $table->integer('usuario_id');
             $table->foreign('usuario_id')
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lancamento');
+        Schema::dropIfExists('lancamentos');
     }
 };

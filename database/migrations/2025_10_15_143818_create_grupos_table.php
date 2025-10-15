@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('grupo', function (Blueprint $table) {
+        Schema::create('grupos', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->integer('ou_id');
-            $table->foreign('ou_id')
+            $table->integer('unidade_organizacional_id');
+            $table->foreign('unidade_organizacional_id')
                   ->references('id')
-                  ->on('ou')
+                  ->on('unidade_organizacionals')
                   ->onDelete('cascade');
             $table->timestamps();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('grupo');
+        Schema::dropIfExists('grupos');
     }
 };
