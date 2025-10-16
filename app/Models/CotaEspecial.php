@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Representa uma cota especial para uma pessoa.
@@ -19,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 class CotaEspecial extends Model
 {
+    use HasFactory;
+
     /**
      * Pega a pessoa à qual esta cota pertence.
      *

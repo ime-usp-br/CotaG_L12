@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Representa um vínculo de uma pessoa.
@@ -18,6 +19,8 @@ use Illuminate\Support\Carbon;
  */
 class Vinculo extends Model
 {
+    use HasFactory;
+
     /**
      * Pega a pessoa à qual este vínculo pertence.
      *

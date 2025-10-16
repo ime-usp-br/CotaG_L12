@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Representa uma pessoa no sistema.
@@ -22,6 +23,8 @@ use Illuminate\Support\Carbon;
  */
 class Pessoa extends Model
 {
+    use HasFactory;
+
     /**
      * A chave primária da tabela.
      * @var string
