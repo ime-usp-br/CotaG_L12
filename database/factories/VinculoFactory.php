@@ -21,7 +21,7 @@ class VinculoFactory extends Factory
             // Garante que o vínculo sempre terá uma pessoa válida associada.
             'codigo_pessoa' => Pessoa::factory(),
             // Gera uma palavra aleatória para o tipo de vínculo.
-            'tipo_vinculo' => $this->faker->word(),
+            'tipo_vinculo' => this->faker->randomElement(['DOCENTE', 'ALUNOPOS', 'SERVIDOR']),
         ];
     }
 }
