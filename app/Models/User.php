@@ -22,6 +22,16 @@ class User extends Authenticatable implements Auditable, FilamentUser, MustVerif
     use \OwenIt\Auditing\Auditable;
 
     /**
+     * Os grupos aos quais o usuário pertence.
+     *
+     * @return BelongsToMany
+     */
+    public function grupos(): BelongsToMany
+    {
+        return $this->belongsToMany(Grupo::class, 'grupo_usuario');
+    }
+
+    /**
      * Attributes to exclude from the Audit.
      *
      * @var array<string>
