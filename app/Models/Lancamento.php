@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Representa um lançamento financeiro.
@@ -23,6 +24,8 @@ use Illuminate\Support\Carbon;
  */
 class Lancamento extends Model
 {
+    use HasFactory;
+
     /**
      * Pega a pessoa associada a este lançamento.
      *
