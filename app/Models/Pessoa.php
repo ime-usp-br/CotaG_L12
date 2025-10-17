@@ -31,17 +31,49 @@ class Pessoa extends Model
      */
     protected $primaryKey = 'codigo_pessoa';
 
-    // Seus relacionamentos ...
+    /**
+     * Indica se os IDs do modelo são auto-incrementáveis.
+     *
+     * Por padrão, o Eloquent assume que a chave primária é um inteiro que se
+     * auto-incrementa. Definir esta propriedade como `false` informa ao Eloquent
+     * que a chave primária (`codigo_pessoa`) não é auto-incrementável e seu
+     * valor será atribuído manualmente na criação de um novo registro.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * Pega todos os lançamentos financeiros associados a esta pessoa.
+     *
+     * O relacionamento é definido explicitamente com as chaves 'codigo_pessoa'
+     * para corresponder à estrutura não-convencional do banco de dados.
+     *
+     * @return HasMany
+     */
     public function lancamentos()
     {
         return $this->hasMany(Lancamento::class, 'codigo_pessoa', 'codigo_pessoa');
     }
 
+    /**
+     * Pega todos os vínculos (ex: Aluno, Servidor) associados a esta pessoa.
+     *
+     * @return HasMany
+     */
     public function vinculos()
     {
         return $this->hasMany(Vinculo::class, 'codigo_pessoa', 'codigo_pessoa');
     }
 
+    /**
+     * Pega a cota especial associada a esta pessoa, se existir.
+     *
+     * Este é um relacionamento um-para-um, significando que uma pessoa
+     * pode ter no máximo uma cota especial.
+     *
+     * @return HasOne
+     */
     public function cotaEspecial()
     {
         return $this->hasOne(CotaEspecial::class, 'codigo_pessoa', 'codigo_pessoa');
