@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Exceptions\ReplicadoServiceException; // Import custom exception
 use Illuminate\Support\Facades\Log;
 use Uspdev\Replicado\Pessoa;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Classe de serviço para interagir com o banco de dados Replicado da USP.
@@ -57,5 +59,36 @@ class ReplicadoService
             // Re-throw as a custom, more specific exception for better handling by callers.
             throw new ReplicadoServiceException('Replicado service communication error while validating NUSP/email.', 0, $e);
         }
+    }
+
+    /**
+     * Busca um único registro de User com base em um critério.
+     *
+     * A busca é realizada na tabela 'users' e tenta encontrar
+     * uma correspondência nos seguintes campos:
+     * - 'codigo_pessoa' (busca exata)
+     * - 'name' (busca parcial, "LIKE")
+     * - 'email' (busca exata)
+     *
+     * @param string $criterio O valor a ser buscado (código, nome ou email).
+     * @return User|null O objeto User encontrado ou null se nenhum resultado for encontrado.
+     */
+    public function buscarPessoa(string $criterio): ?User
+    {
+        // Inicia uma nova consulta no model User
+        return User::query() // Buscando em User
+            ->where(function (Builder $query) use ($criterio) {
+                
+                // Critério 1: Buscar por 'codigo_pessoa' (busca exata)
+                $query->where('codigo_pessoa', $criterio);
+
+                // Critério 2: Buscar por 'name' (busca parcial)
+                $query->orWhere('name', 'like', '%' . $criterio . '%');
+
+                // Critério 3: Buscar por 'email' (busca exata)
+                $query->orWhere('email', $criterio);
+            })
+            // Pega o primeiro resultado
+            ->first();
     }
 }
