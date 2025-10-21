@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Representa uma cota no sistema.
@@ -16,5 +17,6 @@ use Illuminate\Support\Carbon;
  */
 class Cota extends Model
 {
+    use HasFactory;
     // Atualmente, este model não possui relacionamentos definidos.
 }
