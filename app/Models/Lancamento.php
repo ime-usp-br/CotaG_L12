@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
+
 
 /**
  * Representa um lançamento financeiro.
@@ -38,20 +38,17 @@ class Lancamento extends Model
     }
 
     /**
-     * Obtém a soma de todos os lançamentos (débitos) da pessoa no mês corrente.
+     * Limita a consulta para incluir apenas os lançamentos do mês e ano atuais.
      *
-     * @param Pessoa $pessoa
-     * @return int O total de impressões gastas no mês.
+     * Este é um Query Scope do Eloquent, que pode ser usado como ->mesAtual().
+     * A consulta usa a coluna 'data' para a filtragem.
+     *
+     * @param  Builder  $query O construtor de consultas do Eloquent.
+     * @return Builder
      */
-    private function getTotalLancamentosMes(Pessoa $pessoa): int
+    public function scopeMesAtual(Builder $query): Builder
     {
-        // Refatorado para usar o Query Scope.
-        // A lógica de 'whereBetween' foi movida para o model Lancamento.
-        $total = $pessoa->lancamentos()
-            ->where('tipo_lancamento', 1) // Filtra apenas por débitos
-            ->mesAtual()                  
-            ->sum('valor');
-
-        return (int) $total;
+        return $query->whereYear('data', Carbon::now()->year)
+                     ->whereMonth('data', Carbon::now()->month);
     }
 }

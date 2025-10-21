@@ -77,16 +77,11 @@ class CotaService
      */
     private function getTotalLancamentosMes(Pessoa $pessoa): int
     {
-        // Critério 3.3: Obter a soma dos Lancamentos no mês corrente
-        $inicioDoMes = Carbon::now()->startOfMonth();
-        $fimDoMes = Carbon::now()->endOfMonth();
-
-        // Usamos o relacionamento 'lancamentos' que definimos no model Pessoa
+        // Refatorado para usar o Query Scope.
+        // A lógica de 'whereBetween' foi movida para o model Lancamento.
         $total = $pessoa->lancamentos()
-            // Filtra apenas por débitos (conforme migration: 0 = Crédito, 1 = Débito)
-            ->where('tipo_lancamento', 1) 
-            // Filtra pela coluna 'data' da tabela 'lancamentos'
-            ->whereBetween('data', [$inicioDoMes, $fimDoMes])
+            ->where('tipo_lancamento', 1) // Filtra apenas por débitos
+            ->mesAtual()                 
             ->sum('valor');
 
         return (int) $total;
