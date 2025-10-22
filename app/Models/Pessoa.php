@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CotaService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -77,5 +78,19 @@ class Pessoa extends Model
     public function cotaEspecial()
     {
         return $this->hasOne(CotaEspecial::class, 'codigo_pessoa', 'codigo_pessoa');
+    }
+
+    /**
+     * Accessor para o atributo "saldo".
+     *
+     * Este método permite acessar o saldo de cotas de impressão de uma pessoa
+     * como se fosse um atributo do modelo (ex: $pessoa->saldo).
+     *
+     * @param CotaService $cotaService O serviço que calcula o saldo.
+     * @return float O saldo de cotas de impressão.
+     */
+    public function getSaldoAttribute(CotaService $cotaService): float
+    {
+        return $cotaService->calcularSaldo($this);
     }
 }
