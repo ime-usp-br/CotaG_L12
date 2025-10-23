@@ -21,7 +21,7 @@ return new class extends Migration
                   ->references('codigo_pessoa')
                   ->on('pessoas')
                   ->onDelete('cascade');
-            $table->integer('usuario_id');
+            $table->unsignedBigInteger('usuario_id');
             $table->foreign('usuario_id')
                   ->references('id')
                   ->on('users')

@@ -29,5 +29,6 @@ class RoleSeeder extends Seeder
 
         // Admin role for Filament panel access
         Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Operador', 'guard_name' => 'web']);
     }
 }
