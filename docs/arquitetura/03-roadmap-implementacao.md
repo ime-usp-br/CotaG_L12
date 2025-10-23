@@ -32,19 +32,7 @@ O roadmap está organizado em módulos que seguem uma ordem lógica de dependên
 - [ ] `[TEST]` Escrever testes unitários para o `ReplicadoService` utilizando um mock (`FakeReplicadoService`) para simular a interação com o sistema externo.
 - [ ] `[TEST]` Escrever testes unitários exaustivos para o `CotaService`, cobrindo todos os cenários de cálculo de cota: com cota especial, com múltiplos vínculos, sem cota, com saldo negativo, etc.
 
-### Módulo 3: Autenticação e Autorização
-*(Foco: Configurar todo o sistema de acesso, perfis e permissões)*
-
-- [ ] `[CHORE]` Implementar a lógica de login local para `USUARIO` (operadores), que utiliza `codpes` em vez de email.
-- [ ] `[FEAT]` Implementar o fluxo completo de login com Senha Única da USP, incluindo o *callback* que busca ou cria o `User` local.
-- [ ] `[FEAT]` Implementar a funcionalidade de "Recuperação de Senha" para o login local, utilizando o sistema nativo do Laravel Breeze.
-- [ ] `[CHORE]` Criar as permissões `operar-sistema` e `acessar-admin` no `spatie/laravel-permission`.
-- [ ] `[CHORE]` Atribuir a permissão `operar-sistema` ao papel `OPR` e ambas as permissões ao papel `ADM` via Seeder.
-- [ ] `[CHORE]` Aplicar o middleware `can:operar-sistema` às rotas da interface do operador e a lógica de autorização do Filament para o painel administrativo (`canAccessPanel`).
-- [ ] `[TEST]` Escrever testes de feature para garantir que o login local e com Senha Única funcionam corretamente.
-- [ ] `[TEST]` Escrever testes para garantir que as rotas estão protegidas e apenas usuários com os papéis corretos podem acessá-las.
-
-### Módulo 4: Interface Administrativa (Filament)
+### Módulo 3: Interface Administrativa (Filament)
 *(Foco: Criar a área de gestão completa para o perfil Administrador)*
 
 - [ ] `[FEAT]` Estender o `UserResource` do Filament para gerenciar operadores, incluindo o campo `codpes` e a atribuição de papéis e grupos.
@@ -56,7 +44,7 @@ O roadmap está organizado em módulos que seguem uma ordem lógica de dependên
 - [ ] `[FEAT]` Criar um `ExtratoResource` no Filament para a funcionalidade de "Extrato Geral", permitindo a visualização de todos os lançamentos com filtros de data.
 - [ ] `[TEST]` Escrever testes de feature para o `CotaResource` e `CotaEspecialResource`, garantindo que um `ADM` pode criar, editar e deletar cotas.
 
-### Módulo 5: Interface do Operador (Livewire)
+### Módulo 4: Interface do Operador (Livewire)
 *(Foco: Desenvolver a principal tela de operação do sistema de forma interativa)*
 
 - [ ] `[FEAT]` Criar o componente `Livewire\Lancamento\ManageLancamentos` que será a tela principal.
@@ -67,7 +55,7 @@ O roadmap está organizado em módulos que seguem uma ordem lógica de dependên
 - [ ] `[FEAT]` Exibir a tabela com o histórico de lançamentos da pessoa para o mês corrente, que se atualiza automaticamente via Livewire após cada novo lançamento.
 - [ ] `[TEST]` Escrever testes de feature para o componente `ManageLancamentos`, simulando o fluxo completo: buscar um usuário, ver o saldo, registrar um débito e verificar se o saldo foi atualizado na tela.
 
-### Módulo 6: Finalização e Migração
+### Módulo 5: Finalização e Migração
 *(Foco: Preparar o sistema para produção e migrar os dados legados)*
 
 - [ ] `[CHORE]` Criar Seeders para popular os dados iniciais de `cotas`, `papeis`, `unidades_organizacionais` e `grupos`.
