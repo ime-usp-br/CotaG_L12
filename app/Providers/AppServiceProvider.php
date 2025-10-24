@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Cota;
 use App\Observers\PermissionObserver;
 use App\Observers\RoleObserver;
 use App\Policies\AuditPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
+use App\Policies\CotaPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -45,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Audit::class, AuditPolicy::class);
+        Gate::policy(Cota::class, CotaPolicy::class);
 
         // Register observers for auditing Spatie models
         Role::observe(RoleObserver::class);

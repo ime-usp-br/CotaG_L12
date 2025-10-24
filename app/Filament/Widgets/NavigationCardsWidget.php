@@ -6,6 +6,7 @@ use App\Filament\Resources\AuditResource;
 use App\Filament\Resources\Permissions\PermissionResource;
 use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Resources\Cotas\CotaResource;
 use Filament\Widgets\Widget;
 
 class NavigationCardsWidget extends Widget
@@ -51,6 +52,14 @@ class NavigationCardsWidget extends Widget
                 'url' => AuditResource::getUrl('index'),
                 'color' => 'info',
                 'stats' => \OwenIt\Auditing\Models\Audit::count(),
+            ],
+            [
+                'title' => 'Cotas',
+                'description' => 'Gerenciar cotas padrão de impressão',
+                'icon' => 'heroicon-o-document', // O ícone que você definiu
+                'url' => CotaResource::getUrl('index'),  // O link para a página
+                'color' => 'danger', // Escolha a cor que preferir
+                'stats' => \App\Models\Cota::count(), // Contagem de cotas
             ],
         ];
     }
