@@ -18,5 +18,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Cota extends Model
 {
     use HasFactory;
-    // Atualmente, este model não possui relacionamentos definidos.
+
+    /**
+     * Os atributos que podem ser preenchidos em massa.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'tipo_vinculo',
+        'valor',
+    ];
 }
