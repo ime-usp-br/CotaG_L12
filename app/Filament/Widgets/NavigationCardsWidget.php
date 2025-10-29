@@ -7,6 +7,7 @@ use App\Filament\Resources\Permissions\PermissionResource;
 use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Resources\Cotas\CotaResource;
+use App\Filament\Resources\CotaEspecials\CotaEspecialResource;
 use Filament\Widgets\Widget;
 
 class NavigationCardsWidget extends Widget
@@ -56,10 +57,18 @@ class NavigationCardsWidget extends Widget
             [
                 'title' => 'Cotas',
                 'description' => 'Gerenciar cotas padrão de impressão',
-                'icon' => 'heroicon-o-document', // O ícone que você definiu
-                'url' => CotaResource::getUrl('index'),  // O link para a página
-                'color' => 'danger', // Escolha a cor que preferir
-                'stats' => \App\Models\Cota::count(), // Contagem de cotas
+                'icon' => 'heroicon-o-document', 
+                'url' => CotaResource::getUrl('index'), 
+                'color' => 'danger', 
+                'stats' => \App\Models\Cota::count(),
+            ],
+            [
+                'title' => 'Cotas Especiais',
+                'description' => 'Gerenciar cotas de exceção por pessoa',
+                'icon' => 'heroicon-o-star', // Ícone definido no Resource
+                'url' => CotaEspecialResource::getUrl('index'), // Link para o novo resource
+                'color' => 'warning', // Cor diferente para destacar
+                'stats' => \App\Models\CotaEspecial::count(), // Contagem de cotas especiais
             ],
         ];
     }

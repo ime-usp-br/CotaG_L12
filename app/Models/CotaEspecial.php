@@ -23,6 +23,14 @@ class CotaEspecial extends Model
     use HasFactory;
 
     /**
+     * Os atributos que podem ser preenchidos em massa.
+     */
+    protected $fillable = [
+        'codigo_pessoa', // Essencial para o formulário
+        'valor',         // Essencial para o formulário
+    ];
+
+    /**
      * Pega a pessoa à qual esta cota pertence.
      *
      * @return BelongsTo
