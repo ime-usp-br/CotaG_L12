@@ -8,6 +8,7 @@ use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Resources\Cotas\CotaResource;
 use App\Filament\Resources\CotaEspecials\CotaEspecialResource;
+use App\Filament\Resources\Extratos\ExtratoResource;
 use Filament\Widgets\Widget;
 
 class NavigationCardsWidget extends Widget
@@ -69,6 +70,14 @@ class NavigationCardsWidget extends Widget
                 'url' => CotaEspecialResource::getUrl('index'), // Link para o novo resource
                 'color' => 'warning', // Cor diferente para destacar
                 'stats' => \App\Models\CotaEspecial::count(), // Contagem de cotas especiais
+            ],
+            [
+                'title' => 'Lançamentos',
+                'description' => 'Gerenciar débitos e créditos de impressão',
+                'icon' => 'heroicon-o-pencil-square', // Ícone para edição/gerenciamento
+                'url' => ExtratoResource::getUrl('index'), // Link para o resource de lançamentos
+                'color' => 'info', // Escolha uma cor
+                'stats' => \App\Models\Lancamento::count(), // Contagem de lançamentos
             ],
         ];
     }

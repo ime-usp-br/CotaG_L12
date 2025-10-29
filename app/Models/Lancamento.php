@@ -38,6 +38,18 @@ class Lancamento extends Model
     }
 
     /**
+     * Pega o usuário (do sistema) que registrou o lançamento.
+     * (Make sure this method exists EXACTLY like this)
+     * @return BelongsTo
+     */
+    public function usuario(): BelongsTo // <-- MUST be named 'usuario' (lowercase 'u')
+    {
+        // Assumes 'usuario_id' column exists in 'lancamentos' table
+        // Assumes User model's primary key is 'id'
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+    /**
      * Limita a consulta para incluir apenas os lançamentos do mês e ano atuais.
      *
      * Este é um Query Scope do Eloquent, que pode ser usado como ->mesAtual().
