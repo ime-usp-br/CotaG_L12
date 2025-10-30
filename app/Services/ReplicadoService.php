@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Exceptions\ReplicadoServiceException; // Import custom exception
 use Illuminate\Support\Facades\Log;
-use Uspdev\Replicado\Pessoa;
+use Uspdev\Replicado\Pessoa as ReplicadoPessoa; // <-- 1. APELIDO
+use App\Models\Pessoa;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection; 
 
 /**
  * Classe de serviço para interagir com o banco de dados Replicado da USP.
@@ -34,7 +36,7 @@ class ReplicadoService
         }
 
         try {
-            $emailsPessoa = Pessoa::emails($codpes);
+            $emailsPessoa = ReplicadoPessoa::emails($codpes);
 
             if (empty($emailsPessoa)) {
                 Log::info("Replicado Validation: No person found or no emails registered for codpes {$codpes}.");
@@ -62,33 +64,30 @@ class ReplicadoService
     }
 
     /**
-     * Busca um único registro de User com base em um critério.
+     * Busca registros de Pessoa com base em um critério.
      *
-     * A busca é realizada na tabela 'users' e tenta encontrar
-     * uma correspondência nos seguintes campos:
-     * - 'codigo_pessoa' (busca exata)
-     * - 'name' (busca parcial, "LIKE")
-     * - 'email' (busca exata)
+     * A busca é realizada na tabela 'pessoas'.
      *
-     * @param string $criterio O valor a ser buscado (código, nome ou email).
-     * @return User|null O objeto User encontrado ou null se nenhum resultado for encontrado.
+     * @param string $criterio O valor a ser buscado (codigo_pessoa ou nome_pessoa).
+     * @return Collection Os objetos Pessoa encontrados.
      */
-    public function buscarPessoa(string $criterio): ?User
+    public function buscarPessoas(string $criterio): Collection
     {
-        // Inicia uma nova consulta no model User
-        return User::query() // Buscando em User
+        if (strlen($criterio) < 3) {
+            return new Collection(); // Retorna uma lista vazia
+        }
+        // Inicia a consulta no model Pessoa
+        return Pessoa::query()
             ->where(function (Builder $query) use ($criterio) {
                 
                 // Critério 1: Buscar por 'codigo_pessoa' (busca exata)
                 $query->where('codigo_pessoa', $criterio);
 
-                // Critério 2: Buscar por 'name' (busca parcial)
-                $query->orWhere('name', 'like', '%' . $criterio . '%');
+                // Critério 2: Buscar por 'nome_pessoa' (busca parcial)
+                $query->orWhere('nome_pessoa', 'like', '%' . $criterio . '%');
 
-                // Critério 3: Buscar por 'email' (busca exata)
-                $query->orWhere('email', $criterio);
+                // A busca por 'email' foi removida pois não existe na tabela 'pessoas'
             })
-            // Pega o primeiro resultado
-            ->first();
+            ->get();
     }
 }
