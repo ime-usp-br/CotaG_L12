@@ -45,6 +45,16 @@ class Pessoa extends Model
     public $incrementing = false;
 
     /**
+     * Os atributos que podem ser preenchidos em massa.
+     * (ESTA É A CORREÇÃO)
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'codigo_pessoa',
+        'nome_pessoa',
+    ];
+
+    /**
      * Pega todos os lançamentos financeiros associados a esta pessoa.
      *
      * O relacionamento é definido explicitamente com as chaves 'codigo_pessoa'
