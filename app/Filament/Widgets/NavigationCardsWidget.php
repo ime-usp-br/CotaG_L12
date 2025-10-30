@@ -72,12 +72,20 @@ class NavigationCardsWidget extends Widget
                 'stats' => \App\Models\CotaEspecial::count(), // Contagem de cotas especiais
             ],
             [
-                'title' => 'Lançamentos',
-                'description' => 'Gerenciar débitos e créditos de impressão',
+                'title' => 'Extrato',
+                'description' => 'Gerenciar extratos gerais e/ou mensais',
                 'icon' => 'heroicon-o-pencil-square', // Ícone para edição/gerenciamento
                 'url' => ExtratoResource::getUrl('index'), // Link para o resource de lançamentos
                 'color' => 'info', // Escolha uma cor
                 'stats' => \App\Models\Lancamento::count(), // Contagem de lançamentos
+            ],
+            [
+                'title' => 'Realizar Lançamento', // <-- Título corrigido
+                'description' => 'Realizar débitos e créditos de impressão', // <-- Descrição corrigida
+                'icon' => 'heroicon-o-pencil-square',
+                'url' => route('lancamento'), // <-- URL CORRIGIDA (aponta para a rota Livewire)
+                'color' => 'info',
+                'stats' => \App\Models\Lancamento::count(), // A estatística ainda é útil
             ],
         ];
     }
