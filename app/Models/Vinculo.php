@@ -30,4 +30,24 @@ class Vinculo extends Model
     {
         return $this->belongsTo(Pessoa::class, 'codigo_pessoa', 'codigo_pessoa');
     }
+
+
+    public $timestamps = false;
+    protected $table = 'vinculos';
+
+    /**
+     * 1. Definimos uma $primaryKey (qualquer uma das chaves) para
+     * impedir o Eloquent de usar 'id' por padrão.
+     * 2. Mantemos $incrementing como false.
+     */
+    protected $primaryKey = 'codigo_pessoa';
+    public $incrementing = false;
+
+    /**
+     * Os atributos que podem ser preenchidos em massa.
+     */
+    protected $fillable = [
+        'codigo_pessoa',
+        'tipo_vinculo',
+    ];
 }

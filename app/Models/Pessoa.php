@@ -96,11 +96,12 @@ class Pessoa extends Model
      * Este método permite acessar o saldo de cotas de impressão de uma pessoa
      * como se fosse um atributo do modelo (ex: $pessoa->saldo).
      *
-     * @param CotaService $cotaService O serviço que calcula o saldo.
      * @return float O saldo de cotas de impressão.
      */
-    public function getSaldoAttribute(CotaService $cotaService): float
+    public function getSaldoAttribute(): float // 1. Remova o parâmetro daqui
     {
+        $cotaService = app(CotaService::class);
+
         return $cotaService->calcularSaldo($this);
     }
 }

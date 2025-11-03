@@ -41,7 +41,7 @@ class CotaService
      * @param Pessoa $pessoa
      * @return int O valor da cota base.
      */
-    private function getCotaBase(Pessoa $pessoa): int
+    public function getCotaBase(Pessoa $pessoa): int
     {
         // Critério 3.1: Verificar se existe uma CotaEspecial ativa
         // Usamos o relacionamento 'cotaEspecial' que definimos no model Pessoa
