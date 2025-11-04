@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             FilamentAdminSeeder::class,
             // Other seeders can be added here
+            CotaSeeder::class,
         ]);
     }
 }
