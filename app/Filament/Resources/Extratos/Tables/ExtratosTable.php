@@ -100,7 +100,6 @@ class ExtratosTable
             ])
             ->actions([
                 // Nenhuma ação por linha (read-only)
-                ViewAction::make(), // Opcional
             ])
             ->bulkActions([
                 // Nenhuma ação em massa (read-only)

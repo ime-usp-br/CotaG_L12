@@ -27,6 +27,18 @@ use Illuminate\Database\Eloquent\Builder;
 class Lancamento extends Model
 {
     use HasFactory;
+    /**
+     * Os atributos que podem ser preenchidos em massa.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'data',
+        'tipo_lancamento',
+        'valor',
+        'codigo_pessoa',
+        'usuario_id',
+    ];
 
     /**
      * Pega a pessoa associada a este lançamento.

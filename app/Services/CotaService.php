@@ -25,9 +25,10 @@ class CotaService
     {
         $cotaBase = $this->getCotaBase($pessoa);
         $totalLancamentos = $this->getTotalLancamentosMes($pessoa);
+        $totalCreditos = $this->getCreditos($pessoa);
 
         // Critério 4: Calcular o saldo final
-        return $cotaBase - $totalLancamentos;
+        return ($cotaBase + $totalCreditos) - $totalLancamentos;
     }
 
     /**
@@ -85,5 +86,22 @@ class CotaService
             ->sum('valor');
 
         return (int) $total;
+    }
+
+    /**
+     * Obtém a soma de todos os lançamentos (créditos) da pessoa no mês corrente.
+     *
+     * @param Pessoa $pessoa
+     * @return int O total de impressões gastas no mês.
+     */
+    private function getCreditos(Pessoa $pessoa) : int
+    {
+        // Carrega a soma dos créditos (tipo 0) do mês atual
+        $totalCreditos = $pessoa->lancamentos()
+            ->where('tipo_lancamento', 0) // 0 = Crédito
+            ->mesAtual() // Usa o scope
+            ->sum('valor');
+        
+            return (int) $totalCreditos;
     }
 }

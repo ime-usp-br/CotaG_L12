@@ -10,11 +10,15 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use App\Exceptions\ReplicadoServiceException;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Rule;
+use Livewire\WithPagination;
 
 use Livewire\Component;
 
 class ManageLancamentos extends Component
 {
+    use WithPagination;
+
     // Propriedades da Busca
     public string $termoBusca = '';
     public string $termoBuscado = '';
@@ -25,10 +29,26 @@ class ManageLancamentos extends Component
     public ?int $saldoAtual = null;
     public ?int $cotaBase = null;
     public ?Collection $vinculos = null;
-    public ?Collection $lancamentosMes = null;
+    // public ?Collection $lancamentosMes = null;
+
+    // Controla a visibilidade do modal
+    public bool $showLancamentoModal = false;
+
+    // Título do modal (ex: "Registrar Débito")
+    public string $modalLancamentoTipo = ''; 
     
-    // Propriedades do Formulário de Lançamento
+    /**
+     * Critério 1 e 4: Propriedade para o valor, com validação nativa.
+     */
+    #[Rule('required|integer|min:1', as: 'Valor')]
     public ?int $valorLancamento = null;
+
+    /**
+     * Critério 1 e 4: Propriedade para o tipo, com validação nativa.
+     * 0 = Crédito, 1 = Débito (conforme migração)
+     */
+    #[Rule('required|integer|in:0,1', as: 'Tipo de Lançamento')]
+    public ?int $tipoLancamento = null;
 
     /**
      * Limpa toda a seleção e volta para a tela de busca.
@@ -42,6 +62,7 @@ class ManageLancamentos extends Component
             'vinculos', 'lancamentosMes', 'valorLancamento'
         );
         $this->resetErrorBag(); // Limpa erros de validação
+        $this->resetPage();
     }
 
     /**
@@ -57,19 +78,14 @@ class ManageLancamentos extends Component
             $this->saldoAtual = $this->pessoaSelecionada->saldo; // Usa o Accessor
             $this->cotaBase = $cotaService->getCotaBase($this->pessoaSelecionada);
             $this->vinculos = $this->pessoaSelecionada->vinculos; // Carrega a relação
-            
-            // Carrega o histórico de lançamentos do mês para a tabela
-            $this->lancamentosMes = $this->pessoaSelecionada->lancamentos()
-                                        ->whereYear('data', now()->year)
-                                        ->whereMonth('data', now()->month)
-                                        ->with('usuario') // Otimiza para pegar o nome do operador
-                                        ->orderBy('data', 'desc')
-                                        ->get();
 
             // Limpa a UI de busca
             $this->resultadosBusca = null;
             $this->termoBusca = '';
             $this->termoBuscado = $this->pessoaSelecionada->nome_pessoa; // Mostra quem está selecionado
+
+            $this->resetPage();
+
         } else {
             $this->dispatch('alert', 'Erro: Pessoa não encontrada localmente após a seleção.');
             $this->limparBusca();
@@ -184,47 +200,81 @@ class ManageLancamentos extends Component
     }
 
     /**
-     * Ação dos botões "Débito" (1) e "Crédito" (0).
+     * Critério 2 e 5: Salva o novo lançamento (Débito/Crédito).
+     *
+     * Este método é acionado pelo 'wire:submit' do formulário.
+     * Ele valida os dados usando os atributos #[Rule], cria o lançamento
+     * e atualiza a interface.
      */
-    public function realizarLancamento(int $tipoLancamento, CotaService $cotaService)
+    /**
+     * NOVO: Abre o modal de lançamento.
+     * Define o tipo (Débito/Crédito) e prepara o formulário.
+     */
+    public function abrirModalLancamento(int $tipo)
     {
-        // Valida apenas o valor do lançamento
-        $this->validate(
-            ['valorLancamento' => 'required|integer|min:1'],
-            [
-                'valorLancamento.required' => 'O campo Valor é obrigatório.',
-                'valorLancamento.integer' => 'O valor deve ser um número inteiro.',
-                'valorLancamento.min' => 'O valor deve ser pelo menos 1.',
-            ]
-        );
+        $this->resetErrorBag(); // Limpa erros de validação anteriores
+        $this->reset('valorLancamento'); // Limpa o valor
+        
+        $this->tipoLancamento = $tipo;
+        $this->modalLancamentoTipo = ($tipo == 1) ? 'Débito' : 'Crédito'; // 1 = Débito, 0 = Crédito
+        
+        $this->showLancamentoModal = true;
+    }
 
-        if (!$this->pessoaSelecionada) {
-            $this->dispatch('alert', 'Erro: Nenhuma pessoa selecionada.');
+    /**
+     * NOVO: Fecha o modal.
+     */
+    public function fecharModal()
+    {
+        $this->showLancamentoModal = false;
+        $this->reset('valorLancamento', 'tipoLancamento', 'modalLancamentoTipo');
+    }
+
+    /**
+     * MODIFICADO: Salva o lançamento (agora chamado pelo modal).
+     */
+    public function salvarLancamento(CotaService $cotaService)
+    {
+        // 1. Valida APENAS o valor (o tipo já foi definido)
+        $this->validateOnly('valorLancamento');
+
+        // 2. Verifica se a pessoa e o tipo estão definidos
+        if (!$this->pessoaSelecionada || $this->tipoLancamento === null) {
+            $this->dispatch('alert', 'Erro: Sessão inválida ou pessoa não selecionada.');
             return;
         }
 
-        // Cria o lançamento
+        // 3. Cria o lançamento no banco de dados
         Lancamento::create([
             'data' => now(),
-            'tipo_lancamento' => $tipoLancamento, // 0 = Crédito, 1 = Débito
+            'tipo_lancamento' => $this->tipoLancamento, // Usado da propriedade
             'valor' => $this->valorLancamento,
             'codigo_pessoa' => $this->pessoaSelecionada->codigo_pessoa,
-            'usuario_id' => auth()->id(), // Pega o ID do operador logado
+            'usuario_id' => auth()->id(),
         ]);
 
-        // Recarrega todos os dados da pessoa (saldo, histórico)
+        // 4. Recarrega todos os dados da pessoa (saldo, histórico)
         $this->selecionarPessoa($this->pessoaSelecionada->codigo_pessoa, $cotaService);
         
-        // Limpa o campo de valor
-        $this->reset('valorLancamento');
+        // 5. Fecha o modal
+        $this->fecharModal();
         
-        // Mostra uma notificação de sucesso
+        // 6. Mostra uma notificação de sucesso
         $this->dispatch('alert', 'Lançamento realizado com sucesso!');
     }
     
     public function render()
     {
-        return view('livewire.lancamento.manage-lancamentos')
-                ->layout('layouts.app');
+        return view('livewire.lancamento.manage-lancamentos', [
+            // Passa os lançamentos paginados para a view
+            'lancamentosMes' => $this->pessoaSelecionada
+                ? $this->pessoaSelecionada->lancamentos()
+                        ->whereYear('data', now()->year)
+                        ->whereMonth('data', now()->month)
+                        ->with('usuario')
+                        ->orderBy('data', 'desc')
+                        ->paginate(5) // <-- Paginar por 5
+                : null, // Passa null se ninguém estiver selecionado
+        ])->layout('layouts.app');
     }
 }
