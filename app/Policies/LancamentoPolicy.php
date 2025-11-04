@@ -19,7 +19,7 @@ class LancamentoPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Cota $cota): bool
+    public function view(User $user, Lancamento $lancamento): bool
     {
         return $user->hasAnyRole('Admin', 'Operador');
     }
@@ -35,7 +35,7 @@ class LancamentoPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Cota $cota): bool
+    public function update(User $user, Lancamento $lancamento): bool
     {
         return $user->hasAnyRole('Admin', 'Operador');
     }
@@ -43,7 +43,7 @@ class LancamentoPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Cota $cota): bool
+    public function delete(User $user, Lancamento $lancamento): bool
     {
         return $user->hasAnyRole('Admin', 'Operador');
     }
@@ -51,7 +51,7 @@ class LancamentoPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Cota $cota): bool
+    public function restore(User $user, Lancamento $lancamento): bool
     {
         return $user->hasAnyRole('Admin', 'Operador');
     }
@@ -59,7 +59,7 @@ class LancamentoPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Cota $cota): bool
+    public function forceDelete(User $user, Lancamento $lancamento): bool
     {
         return $user->hasAnyRole('Admin', 'Operador');
     }

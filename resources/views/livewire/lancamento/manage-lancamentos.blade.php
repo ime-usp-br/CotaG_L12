@@ -108,23 +108,18 @@
                                             </div>
                                         </div>
 
-                                        {{-- Card: Formulário de Lançamento --}}
+                                        {{-- Card: Ações de Lançamento (Novos Botões) --}}
                                         <div>
-                                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200">Formulário de Lançamento</h3>
+                                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200">Ações de Lançamento</h3>
                                             <div class="mt-2 space-y-4">
-                                                <div>
-                                                    <x-input-label for="valorLancamento" value="Valor:" />
-                                                    <x-text-input wire:model="valorLancamento" id="valorLancamento" class="block mt-1 w-full" type="number" min="1" placeholder="Ex: 100" />
-                                                    <x-input-error :messages="$errors->get('valorLancamento')" class="mt-2" />
-                                                </div>
                                                 <div class="flex space-x-4">
                                                     {{-- Botão Débito --}}
-                                                    <x-danger-button type="button" class="flex-1 justify-center py-3" wire:click="realizarLancamento(1)" wire:loading.attr="disabled">
-                                                        Débito
+                                                    <x-danger-button type="button" class="flex-1 justify-center py-3" wire:click="abrirModalLancamento(1)">
+                                                        Registrar Débito
                                                     </x-danger-button>
                                                     {{-- Botão Crédito --}}
-                                                    <x-primary-button type="button" class="flex-1 justify-center py-3" wire:click="realizarLancamento(0)" style="background-color: #16a34a; --tw-shadow-color: #15803d;" wire:loading.attr="disabled">
-                                                        Crédito
+                                                    <x-primary-button type="button" class="flex-1 justify-center py-3" wire:click="abrirModalLancamento(0)" style="background-color: #16a34a; --tw-shadow-color: #15803d;">
+                                                        Registrar Crédito
                                                     </x-primary-button>
                                                 </div>
                                             </div>
@@ -136,43 +131,77 @@
                                         <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200">Histórico de Lançamentos do Mês</h3>
                                         <div class="mt-2 flow-root">
                                             <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-                                                @forelse($lancamentosMes as $lancamento)
-                                                    <li class="py-3" wire:key="lanc-{{ $lancamento->id }}">
-                                                        <div class="flex items-center space-x-4">
-                                                            <div class="flex-shrink-0">
-                                                                @if($lancamento->tipo_lancamento == 1) {{-- Débito --}}
-                                                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/50">
-                                                                        <svg class="h-5 w-5 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" />
-                                                                        </svg>
-                                                                    </span>
-                                                                @else {{-- Crédito --}}
-                                                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/50">
-                                                                        <svg class="h-5 w-5 text-green-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                                                        </svg>
-                                                                    </span>
-                                                                @endif
-                                                            </div>
-                                                            <div class="flex-1 min-w-0">
-                                                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                                    {{ $lancamento->tipo_lancamento == 1 ? 'Débito' : 'Crédito' }} de {{ $lancamento->valor }}
-                                                                </p>
-                                                                <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                                                    Operador: {{ $lancamento->usuario->name ?? 'Sistema' }}
-                                                                </p>
-                                                            </div>
-                                                            <div class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                                                {{ \Carbon\Carbon::parse($lancamento->data)->format('d/m/y H:i') }}
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                @empty
+                                                
+                                                {{-- Caso 1: Não há NENHUM lançamento no total --}}
+                                                @if ($lancamentosMes->total() == 0)
                                                     <li class="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                                                         Nenhum lançamento este mês.
                                                     </li>
-                                                @endforelse
+                                                
+                                                {{-- Caso 2: Há lançamentos (pode ter 1, 2, 5, etc.) --}}
+                                                @else
+                                                    {{-- Renderiza os lançamentos reais desta página --}}
+                                                    @foreach ($lancamentosMes as $lancamento)
+                                                        <li class="py-3" wire:key="lanc-{{ $lancamento->id }}">
+                                                            <div class="flex items-center space-x-4">
+                                                                <div class="flex-shrink-0">
+                                                                    @if($lancamento->tipo_lancamento == 1) {{-- Débito --}}
+                                                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/50">
+                                                                            <svg class="h-5 w-5 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                                                <path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" />
+                                                                            </svg>
+                                                                        </span>
+                                                                    @else {{-- Crédito --}}
+                                                                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/50">
+                                                                            <svg class="h-5 w-5 text-green-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                                                            </svg>
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="flex-1 min-w-0">
+                                                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                                        {{ $lancamento->tipo_lancamento == 1 ? 'Débito' : 'Crédito' }} de {{ $lancamento->valor }}
+                                                                    </p>
+                                                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                                                        Operador: {{ $lancamento->usuario->name ?? 'Sistema' }}
+                                                                    </p>
+                                                                </div>
+                                                                <div class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                                                    {{ \Carbon\Carbon::parse($lancamento->data)->format('d/m/y H:i') }}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    @endforeach
+
+                                                    {{-- **** AQUI ESTÁ A MÁGICA **** --}}
+                                                    {{-- Preenche os slots vazios para manter a altura fixa de 5 itens --}}
+                                                    @for ($i = $lancamentosMes->count(); $i < 5; $i++)
+                                                        <li class="py-3 border-t-transparent dark:border-t-transparent" wire:key="placeholder-{{ $i }}">
+                                                            
+                                                            <div class="flex items-center space-x-4 invisible" aria-hidden="true">
+                                                                <div class="flex-shrink-0">
+                                                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700"></span>
+                                                                </div>
+                                                                <div class="flex-1 min-w-0">
+                                                                    <p class="text-sm font-medium text-gray-900 truncate">&nbsp;</p>
+                                                                    <p class="text-sm text-gray-500 truncate">&nbsp;</p>
+                                                                </div>
+                                                                <div class="inline-flex items-center text-sm text-gray-500">
+                                                                    &nbsp;
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    @endfor
+                                                @endif
                                             </ul>
+
+                                            {{-- Renderiza os links de paginação (1, 2, Próximo...) --}}
+                                            @if ($lancamentosMes && $lancamentosMes->hasPages())
+                                                <div class="mt-10">
+                                                    {{ $lancamentosMes->links() }}
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -185,4 +214,69 @@
             </div>
         </div>
     </div>
+
+{{-- **** INÍCIO DO MODAL DE LANÇAMENTO (POP-UP) - VERSÃO CORRIGIDA (Sem Alpine.js) **** --}}
+    @if($showLancamentoModal)
+    <div 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4" 
+        style="background-color: rgba(0, 0, 0, 0.75);"
+    >
+        {{-- Fundo do Modal (clicar para fechar) --}}
+        <div class="fixed inset-0" wire:click="fecharModal"></div>
+
+        {{-- Conteúdo do Modal --}}
+        <div class
+            ="relative w-full max-w-lg p-6 bg-white rounded-lg shadow-xl dark:bg-gray-800"
+            {{-- Todos os atributos 'x-data', 'x-show' e 'x-transition' foram removidos --}}
+            {{-- A visibilidade agora é controlada 100% pelo @if($showLancamentoModal) --}}
+        >
+            <form wire:submit.prevent="salvarLancamento">
+                {{-- Cabeçalho do Modal --}}
+                <div class="flex items-start justify-between">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        Registrar {{ $modalLancamentoTipo }}
+                    </h3>
+                    <button 
+                        type="button" 
+                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" 
+                        wire:click="fecharModal"
+                    >
+                        {{-- Ícone X (fechar) --}}
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+
+                {{-- Corpo do Modal (Formulário) --}}
+                <div class="mt-4">
+                    <x-input-label for="valorLancamentoModal" value="Valor:" />
+                    <x-text-input 
+                        wire:model="valorLancamento" 
+                        id="valorLancamentoModal" 
+                        class="block mt-1 w-full" 
+                        type="number" 
+                        min="1" 
+                        placeholder="Ex: 100" 
+                        autofocus {{-- Foca no campo ao abrir --}}
+                    />
+                    <x-input-error :messages="$errors->get('valorLancamento')" class="mt-2" />
+                </div>
+
+                {{-- Rodapé do Modal (Botões) --}}
+                <div class="mt-6 flex justify-end space-x-4">
+                    <x-secondary-button type="button" wire:click="fecharModal">
+                        Cancelar
+                    </x-secondary-button>
+                    
+                    <x-primary-button 
+                        type="submit" 
+                        class="{{ $tipoLancamento == 1 ? 'bg-red-600 hover:bg-red-700 focus:bg-red-700 active:bg-red-800' : 'bg-green-600 hover:bg-green-700 focus:bg-green-700 active:bg-green-800' }}"
+                    >
+                        Salvar {{ $modalLancamentoTipo }}
+                    </x-primary-button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+    {{-- **** FIM DO MODAL DE LANÇAMENTO **** --}}
 </div>
