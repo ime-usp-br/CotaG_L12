@@ -59,7 +59,7 @@ class ManageLancamentos extends Component
         $this->reset(
             'termoBusca', 'termoBuscado', 'resultadosBusca', 
             'pessoaSelecionada', 'saldoAtual', 'cotaBase', 
-            'vinculos', 'lancamentosMes', 'valorLancamento'
+            'vinculos', 'valorLancamento'
         );
         $this->resetErrorBag(); // Limpa erros de validação
         $this->resetPage();
