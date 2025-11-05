@@ -28,6 +28,7 @@ class ManageLancamentos extends Component
     public ?Pessoa $pessoaSelecionada = null; 
     public ?int $saldoAtual = null;
     public ?int $cotaBase = null;
+    public ?int $cotaEspecial = null;
     public ?Collection $vinculos = null;
     // public ?Collection $lancamentosMes = null;
 
@@ -59,7 +60,7 @@ class ManageLancamentos extends Component
         $this->reset(
             'termoBusca', 'termoBuscado', 'resultadosBusca', 
             'pessoaSelecionada', 'saldoAtual', 'cotaBase', 
-            'vinculos', 'valorLancamento'
+            'cotaEspecial', 'vinculos', 'valorLancamento'
         );
         $this->resetErrorBag(); // Limpa erros de validação
         $this->resetPage();
@@ -77,6 +78,7 @@ class ManageLancamentos extends Component
             // Carrega os dados para o layout da imagem
             $this->saldoAtual = $this->pessoaSelecionada->saldo; // Usa o Accessor
             $this->cotaBase = $cotaService->getCotaBase($this->pessoaSelecionada);
+            $this->cotaEspecial = $cotaService->getCotaEspecial($this->pessoaSelecionada);
             $this->vinculos = $this->pessoaSelecionada->vinculos; // Carrega a relação
 
             // Limpa a UI de busca
@@ -232,6 +234,9 @@ class ManageLancamentos extends Component
 
     /**
      * MODIFICADO: Salva o lançamento (agora chamado pelo modal).
+     *
+     * Este método agora DELEGA a lógica de criação para o CotaService,
+     * que sabe como lidar com o consumo de cotas especiais.
      */
     public function salvarLancamento(CotaService $cotaService)
     {
@@ -244,15 +249,15 @@ class ManageLancamentos extends Component
             return;
         }
 
-        // 3. Cria o lançamento no banco de dados
-        Lancamento::create([
-            'data' => now(),
-            'tipo_lancamento' => $this->tipoLancamento, // Usado da propriedade
-            'valor' => $this->valorLancamento,
-            'codigo_pessoa' => $this->pessoaSelecionada->codigo_pessoa,
-            'usuario_id' => auth()->id(),
-        ]);
-
+        // 3. CHAMA O SERVIÇO PARA REGISTRAR O LANÇAMENTO
+        // A lógica de "consumir cota especial" agora está dentro deste método.
+        $cotaService->registrarDebitoOuCredito(
+            $this->pessoaSelecionada,
+            $this->valorLancamento,
+            $this->tipoLancamento,
+            auth()->id() // Passa o ID do operador logado
+        );
+        
         // 4. Recarrega todos os dados da pessoa (saldo, histórico)
         $this->selecionarPessoa($this->pessoaSelecionada->codigo_pessoa, $cotaService);
         

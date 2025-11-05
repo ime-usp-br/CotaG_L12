@@ -101,6 +101,7 @@
                                                 </p>
                                                 
                                                 <p><span class="font-semibold text-gray-700 dark:text-gray-300">Cota Base:</span> {{ $cotaBase }}</p>
+                                                <p><span class="font-semibold text-gray-700 dark:text-gray-300">Cota Especial:</span> {{ $cotaEspecial }}</p>
                                                 
                                                 <p class="text-2xl font-bold {{ $saldoAtual >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                                                     Saldo: {{ $saldoAtual }}
