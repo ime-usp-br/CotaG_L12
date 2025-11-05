@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Cota;
 use App\Models\Pessoa;
+use App\Models\CotaEspecial;
+use App\Models\Lancamento;
 use Carbon\Carbon; // Importamos o Carbon para lidar com datas
 use Illuminate\Database\Eloquent\Builder;
 
@@ -14,9 +16,91 @@ use Illuminate\Database\Eloquent\Builder;
 class CotaService
 {
     /**
+     * Ponto de entrada principal para registrar um débito ou crédito.
+     *
+     * @param Pessoa $pessoa A pessoa que recebe o lançamento.
+     * @param integer $valor O valor total do lançamento.
+     * @param integer $tipo 0 para Crédito, 1 para Débito.
+     * @param integer $operadorId O ID do usuário logado que está fazendo a operação.
+     */
+    public function registrarDebitoOuCredito(Pessoa $pessoa, int $valor, int $tipo, int $operadorId): void
+    {
+        if ($tipo == 0) {
+            // Se for CRÉDITO, apenas crie o lançamento.
+            Lancamento::create([
+                'data' => now(),
+                'tipo_lancamento' => 0,
+                'valor' => $valor,
+                'codigo_pessoa' => $pessoa->codigo_pessoa,
+                'usuario_id' => $operadorId,
+            ]);
+            return;
+        }
+        else {
+            $this->consumirCotaEspecial($pessoa, $valor);
+            
+            Lancamento::create([
+                'data' => now(),
+                'tipo_lancamento' => 1,
+                'valor' => $valor,
+                'codigo_pessoa' => $pessoa->codigo_pessoa,
+                'usuario_id' => $operadorId,
+            ]);
+        }
+    }
+
+    /**
+     * Consome o valor de um débito das cotas especiais da pessoa (FIFO).
+     * Atualiza ou deleta os registros de CotaEspecial no banco.
+     *
+     * @param Pessoa $pessoa
+     * @param integer $valorDebito O valor total do débito.
+     * @return integer O valor do débito que RESTOU após consumir as cotas.
+     */
+    private function consumirCotaEspecial(Pessoa $pessoa, int $valorDebito): int
+    {
+        $cotasEspeciais = CotaEspecial::where('codigo_pessoa', $pessoa->codigo_pessoa)
+                                      ->orderBy('id', 'asc') // Pega a mais antiga primeiro
+                                      ->get();
+
+        $debitoRestante = $valorDebito;
+
+        foreach ($cotasEspeciais as $cota) {
+            if ($debitoRestante <= 0) {
+                // O débito já foi totalmente coberto.
+                break;
+            }
+
+            $valorNestaCota = $cota->valor;
+
+            if ($debitoRestante >= $valorNestaCota) {
+                // O débito (ex: 50) é maior que esta cota (ex: 10).
+                // Consome a cota inteira.
+                
+                $debitoRestante -= $valorNestaCota; // Débito agora é 40
+                $cota->delete(); // Deleta o registro da cota de 10
+
+            } else {
+                // O débito (ex: 5) é menor que esta cota (ex: 20).
+                // Consome parte da cota.
+                
+                $cota->valor -= $debitoRestante; // Cota agora vale 15
+                $cota->save(); // Atualiza o registro no banco
+
+                $debitoRestante = 0; // O débito foi totalmente coberto.
+            }
+        }
+
+        // Retorna o que sobrou do débito, que será descontado da Cota Base.
+        return $debitoRestante;
+    }
+
+
+    /**
      * Calcula o saldo de impressões restante para uma pessoa no mês corrente.
      *
-     * O cálculo segue a lógica: (Cota Base - Total de Lançamentos do Mês)
+     * ESTA LÓGICA AGORA É SIMPLES:
+     * (Cota Base + Cota Especial + Créditos) - Débitos da Cota Base
      *
      * @param Pessoa $pessoa O objeto Pessoa para o qual o saldo será calculado.
      * @return int O saldo final de impressões.
@@ -24,52 +108,51 @@ class CotaService
     public function calcularSaldo(Pessoa $pessoa): int
     {
         $cotaBase = $this->getCotaBase($pessoa);
-        $totalLancamentos = $this->getTotalLancamentosMes($pessoa);
+        $cotaEspecial = $this->getCotaEspecial($pessoa); // Pega o que sobrou
         $totalCreditos = $this->getCreditos($pessoa);
+        $totalDebitos = $this->getTotalLancamentosMes($pessoa); // Pega só os débitos da cota base
 
-        // Critério 4: Calcular o saldo final
-        return ($cotaBase + $totalCreditos) - $totalLancamentos;
+        // O saldo é a soma de todas as cotas (Base + Especial + Créditos)
+        // menos a soma de todos os débitos (que agora só afetam a base).
+        $saldo = ($cotaBase + $cotaEspecial + $totalCreditos) - $totalDebitos;
+        
+        return (int) $saldo;
     }
 
     /**
-     * Obtém a cota base de impressões para a pessoa.
-     *
-     * A lógica segue a ordem de prioridade:
-     * 1. Valor da CotaEspecial, se existir.
-     * 2. Valor máximo das Cotas padrão associadas aos Vínculos da pessoa.
-     * 3. Retorna 0 se nenhuma cota for encontrada.
+     * Obtém a cota base de impressões para a pessoa (APENAS DO VÍNCULO).
+     * 1. Valor máximo das Cotas padrão associadas aos Vínculos da pessoa.
+     * 2. Retorna 0 se nenhuma cota for encontrada.
      *
      * @param Pessoa $pessoa
      * @return int O valor da cota base.
      */
     public function getCotaBase(Pessoa $pessoa): int
     {
-        // Critério 3.1: Verificar se existe uma CotaEspecial ativa
-        // Usamos o relacionamento 'cotaEspecial' que definimos no model Pessoa
-        $cotaEspecial = $pessoa->cotaEspecial;
-
-        if ($cotaEspecial) {
-            return (int) $cotaEspecial->valor;
-        }
-
-        // Critério 3.2: Buscar a maior Cota padrão com base nos Vínculos
-        // Usamos o relacionamento 'vinculos' que definimos no model Pessoa
-        
-        // 1. Pegamos todos os 'tipo_vinculo' da pessoa (ex: 'ALUNO', 'SERVIDOR')
         $tiposDeVinculo = $pessoa->vinculos->pluck('tipo_vinculo');
 
-        // Se a pessoa não tiver vínculos, não tem cota padrão.
         if ($tiposDeVinculo->isEmpty()) {
-            return 0; // Cumpre o Critério 5
+            return 0;
         }
 
-        // 2. Buscamos na tabela 'cotas' qual é o maior valor
-        //    entre os tipos de vínculo que a pessoa possui.
         $cotaMaxima = Cota::whereIn('tipo_vinculo', $tiposDeVinculo)->max('valor');
 
-        return (int) $cotaMaxima; // (int) de null é 0, o que também cumpre o Critério 5
+        return (int) $cotaMaxima;
     }
 
+    /**
+     * Obtém a SOMA de todas as cotas especiais de uma pessoa.
+     *
+     * @param Pessoa $pessoa
+     * @return integer
+     */
+    public function getCotaEspecial(Pessoa $pessoa): int
+    {
+        $somaCotasEspeciais = CotaEspecial::where('codigo_pessoa', $pessoa->codigo_pessoa)
+                                        ->sum('valor');
+
+        return (int) $somaCotasEspeciais;
+    }
     /**
      * Obtém a soma de todos os lançamentos (débitos) da pessoa no mês corrente.
      *
