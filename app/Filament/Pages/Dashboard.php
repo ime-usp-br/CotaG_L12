@@ -33,7 +33,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             Action::make('backToDashboard')
-                ->label('Voltar ao Painel')
+                ->label('Voltar ao Dashboard')
                 ->icon('heroicon-o-arrow-left')
                 ->url(route('dashboard'))
                 ->color('gray'),

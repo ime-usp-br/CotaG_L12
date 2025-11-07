@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use OwenIt\Auditing\Models\Audit;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -52,5 +54,32 @@ class AppServiceProvider extends ServiceProvider
         // Register observers for auditing Spatie models
         Role::observe(RoleObserver::class);
         Permission::observe(PermissionObserver::class);
+
+        /**
+         * 3. ADICIONE ESTE BLOCO DE CÓDIGO
+         *
+         * Sobrescreve a resposta padrão de login do Fortify (usado pelo Breeze).
+         * Se o usuário for um 'Operador', redireciona para a tela de lançamentos.
+         * Outros usuários (Admin, etc.) continuam indo para o dashboard padrão.
+         */
+        $this->app->singleton(LoginResponse::class, function ($app) {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    /** @var \App\Models\User $user */
+                    $user = auth()->user();
+
+                    if ($user->hasRole('Operador')) {
+                        // Redireciona Operadores para a tela principal da ferramenta
+                        return redirect()->route('lancamento');
+                    }
+
+                    // Redirecionamento padrão para Admin e outros perfis
+                    return redirect()->intended(config('fortify.home'));
+                }
+            };
+        });
     }
+
+    
 }

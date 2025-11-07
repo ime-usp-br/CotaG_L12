@@ -13,9 +13,18 @@ Route::get('/lancamento', ManageLancamentos::class)
     ])
     ->name('lancamento');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::get('/dashboard', function () {
+    /** @var \App\Models\User $user */
+    $user = auth()->user();
+
+    // Se o usuário for um Operador, redireciona para a ferramenta principal.
+    if ($user->hasRole('Operador')) {
+        return redirect()->route('lancamento');
+    }
+
+    // Se for Admin ou outro, mostra o dashboard normal.
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

@@ -10,6 +10,7 @@ use App\Filament\Resources\Cotas\CotaResource;
 use App\Filament\Resources\CotaEspecials\CotaEspecialResource;
 use App\Filament\Resources\Extratos\ExtratoResource;
 use Filament\Widgets\Widget;
+use Illuminate\Support\HtmlString;
 
 class NavigationCardsWidget extends Widget
 {
@@ -56,37 +57,37 @@ class NavigationCardsWidget extends Widget
                 'stats' => \OwenIt\Auditing\Models\Audit::count(),
             ],
             [
-                'title' => 'Cotas',
-                'description' => 'Gerenciar cotas padrão de impressão',
-                'icon' => 'heroicon-o-document', 
-                'url' => CotaResource::getUrl('index'), 
-                'color' => 'danger', 
-                'stats' => \App\Models\Cota::count(),
-            ],
-            [
-                'title' => 'Cotas Especiais',
-                'description' => 'Gerenciar cotas de exceção por pessoa',
-                'icon' => 'heroicon-o-star', // Ícone definido no Resource
-                'url' => CotaEspecialResource::getUrl('index'), // Link para o novo resource
-                'color' => 'warning', // Cor diferente para destacar
-                'stats' => \App\Models\CotaEspecial::count(), // Contagem de cotas especiais
-            ],
-            [
-                'title' => 'Extrato',
-                'description' => 'Gerenciar extratos gerais e/ou mensais',
-                'icon' => 'heroicon-o-pencil-square', // Ícone para edição/gerenciamento
-                'url' => ExtratoResource::getUrl('index'), // Link para o resource de lançamentos
-                'color' => 'info', // Escolha uma cor
-                'stats' => \App\Models\Lancamento::count(), // Contagem de lançamentos
-            ],
-            [
-                'title' => 'Realizar Lançamento', // <-- Título corrigido
-                'description' => 'Realizar débitos e créditos de impressão', // <-- Descrição corrigida
-                'icon' => 'heroicon-o-pencil-square',
-                'url' => route('lancamento'), // <-- URL CORRIGIDA (aponta para a rota Livewire)
-                'color' => 'info',
-                'stats' => \App\Models\Lancamento::count(), // A estatística ainda é útil
-            ],
+            'title' => 'Cotas',
+            'description' => 'Gerenciar cotas padrão de impressão',
+            'icon' => 'heroicon-o-rectangle-stack', 
+            'url' => CotaResource::getUrl('index'), 
+            'color' => 'gray', // <-- Cor neutra (cinzento)
+            'stats' => \App\Models\Cota::count(),
+        ],
+        [
+            'title' => 'Cotas Especiais',
+            'description' => 'Gerenciar cotas de exceção por pessoa',
+            'icon' => 'heroicon-o-star', 
+            'url' => CotaEspecialResource::getUrl('index'), 
+            'color' => 'fuchsia', // <-- Cor de destaque (rosa/roxo)
+            'stats' => \App\Models\CotaEspecial::count(),
+        ],
+        [
+            'title' => 'Extrato',
+            'description' => 'Gerenciar extratos gerais e/ou mensais',
+            'icon' => 'heroicon-o-clipboard-document-list', 
+            'url' => ExtratoResource::getUrl('index'), 
+            'color' => 'teal', // <-- Cor de informação (verde-azulado)
+            'stats' => \App\Models\Lancamento::count(),
+        ],
+        [
+            'title' => 'Realizar Lançamento', 
+            'description' => 'Realizar débitos e créditos de impressão',
+            'icon' => 'heroicon-o-arrows-right-left', 
+            'url' => route('lancamento'), 
+            'color' => 'indigo', // <-- Cor de ação principal (azul-escuro/roxo)
+            'stats' => \App\Models\Lancamento::count(),
+        ],
         ];
     }
 }
