@@ -82,7 +82,7 @@ class User extends Authenticatable implements Auditable, FilamentUser, MustVerif
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'admin') {
-            return $this->hasRole('Admin');
+            return $this->hasAnyRole('Admin', 'Operador');
         }
 
         return true;
