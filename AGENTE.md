@@ -260,6 +260,13 @@ Ref: #42
 - **Feature:** Teste fluxos de lançamento e integração com Filament.
 - **Fakes:** Use `FakeReplicadoService` para simular respostas da USP.
 
+### 8.3. GitHub CLI
+Caso precise visualizar detalhes de uma issue e não tenha acesso ao navegador, use:
+```bash
+# Visualizar issue (título e corpo)
+gh issue view <ID> --json title,body
+```
+
 ---
 
 ## 9. Comandos Úteis
