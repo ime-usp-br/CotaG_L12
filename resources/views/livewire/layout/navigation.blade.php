@@ -41,10 +41,10 @@ new class extends Component
                         {{-- Cotas, Cota Especial e Extrato foram REMOVIDOS daqui --}}
                     @else
                         {{-- Navegação padrão para Admin e outros --}}
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Dashboard') }}
-                        </x-nav-link>
                         @role('Admin')
+                        <x-nav-link :href="route('lancamento')" :active="request()->routeIs('lancamento')" wire:navigate>
+                            {{ __('Realizar Lançamento') }}
+                        </x-nav-link>
                             <x-nav-link :href="url('/admin')" :active="request()->is('admin*')" wire:navigate>
                                 {{ __('Painel Admin') }}
                             </x-nav-link>
@@ -116,10 +116,11 @@ new class extends Component
                 </x-responsive-nav-link>
                 {{-- Cotas, Cota Especial e Extrato foram REMOVIDOS daqui --}}
             @else
-                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
-                </x-responsive-nav-link>
                 @role('Admin')
+                {{-- Deixamos apenas o link principal --}}
+                <x-responsive-nav-link :href="route('lancamento')" :active="request()->routeIs('lancamento')" wire:navigate>
+                    {{ __('Realizar Lançamento') }}
+                </x-responsive-nav-link>
                     <x-responsive-nav-link :href="url('/admin')" :active="request()->is('admin*')" wire:navigate>
                         {{ __('Painel Admin') }}
                     </x-responsive-nav-link>
