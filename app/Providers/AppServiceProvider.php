@@ -55,30 +55,37 @@ class AppServiceProvider extends ServiceProvider
         Role::observe(RoleObserver::class);
         Permission::observe(PermissionObserver::class);
 
-        /**
-         * 3. ADICIONE ESTE BLOCO DE CÓDIGO
-         *
-         * Sobrescreve a resposta padrão de login do Fortify (usado pelo Breeze).
-         * Se o usuário for um 'Operador', redireciona para a tela de lançamentos.
-         * Outros usuários (Admin, etc.) continuam indo para o dashboard padrão.
-         */
+
+
         $this->app->singleton(LoginResponse::class, function ($app) {
             return new class implements LoginResponse {
                 public function toResponse($request)
                 {
                     /** @var \App\Models\User $user */
                     $user = auth()->user();
-
-                    if ($user->hasRole('Operador')) {
+                    if ($user->hasRole('Operador') || $user->hasRole('Admin')) {
                         // Redireciona Operadores para a tela principal da ferramenta
                         return redirect()->route('lancamento');
                     }
-
                     // Redirecionamento padrão para Admin e outros perfis
                     return redirect()->intended(config('fortify.home'));
                 }
             };
         });
+
+        // Custom Login Response for Filament Admin Panel
+        $this->app->bind(
+            \Filament\Auth\Http\Responses\Contracts\LoginResponse::class,
+            function () {
+                return new class implements \Filament\Auth\Http\Responses\Contracts\LoginResponse {
+                    public function toResponse($request): \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+                    {
+                        return redirect()->route('lancamento');
+                    }
+                };
+            }
+        );
+
     }
 
     

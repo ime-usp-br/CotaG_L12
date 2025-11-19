@@ -3,7 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Lancamento\ManageLancamentos;
 
-Route::view('/', 'welcome');
+Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->hasRole('Operador') || $user->hasRole('Admin')) {
+            return redirect()->route('lancamento');
+        }
+        return redirect()->route('dashboard');
+    }
+    return view('welcome');
+});
 
 Route::get('/lancamento', ManageLancamentos::class)
     ->middleware([
@@ -17,8 +26,8 @@ Route::get('/dashboard', function () {
     /** @var \App\Models\User $user */
     $user = auth()->user();
 
-    // Se o usuário for um Operador, redireciona para a ferramenta principal.
-    if ($user->hasRole('Operador')) {
+    // Se o usuário for um Operador ou Admin, redireciona para a ferramenta principal.
+    if ($user->hasRole('Operador') || $user->hasRole('Admin')) {
         return redirect()->route('lancamento');
     }
 
