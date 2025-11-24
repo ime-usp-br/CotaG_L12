@@ -195,6 +195,9 @@ class AuditResource extends Resource
                         'App\Models\User' => 'User',
                         'App\Models\Role' => 'Role',
                         'App\Models\Permission' => 'Permission',
+                        'App\Models\Cota' => 'Cota',
+                        'App\Models\CotaEspecial' => 'Cota Especial',
+                        'App\Models\Lancamento' => 'Lançamento (Extrato)',
                     ]),
 
                 SelectFilter::make('user_id')

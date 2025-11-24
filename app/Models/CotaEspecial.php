@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
+use OwenIt\Auditing\Contracts\Auditable;
+
 /**
  * Representa uma cota especial para uma pessoa.
  *
@@ -17,9 +19,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at Timestamp da última atualização do registro.
  * @property-read Pessoa $pessoa A pessoa à qual esta cota pertence.
  */
-class CotaEspecial extends Model
+class CotaEspecial extends Model implements Auditable
 {
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     /**
      * Os atributos que podem ser preenchidos em massa.

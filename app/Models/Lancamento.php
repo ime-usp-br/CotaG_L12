@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
+use OwenIt\Auditing\Contracts\Auditable;
+
 /**
  * Representa um lançamento financeiro.
  *
@@ -22,9 +24,10 @@ use Illuminate\Support\Carbon;
  * @property-read Pessoa $pessoa A pessoa associada a este lançamento.
  * @property-read User $usuario O usuário que registrou este lançamento.
  */
-class Lancamento extends Model
+class Lancamento extends Model implements Auditable
 {
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     /**
      * Os atributos que podem ser preenchidos em massa.
