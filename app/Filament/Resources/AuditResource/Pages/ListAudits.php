@@ -14,7 +14,7 @@ class ListAudits extends ListRecords
     {
         return [
             Action::make('backToDashboard')
-                ->label('Voltar ao Dashboard')
+                ->label('Voltar ao Painel Administrativo')
                 ->icon('heroicon-o-arrow-left')
                 ->url(url('/admin'))
                 ->color('gray'),
