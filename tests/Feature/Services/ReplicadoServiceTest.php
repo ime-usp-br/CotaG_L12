@@ -15,7 +15,6 @@ class ReplicadoServiceTest extends TestCase
 
     /**
      * Testa se o serviço consegue encontrar um usuário pelo seu 'codigo_pessoa'.
-     * @return void
      */
     public function test_ele_encontra_um_usuario_pelo_codpes(): void
     {
@@ -23,7 +22,7 @@ class ReplicadoServiceTest extends TestCase
         $user = User::factory()->create([
             'codigo_pessoa' => '12345678',
             'name' => 'Usuário Teste Codpes',
-            'email' => 'codigo_pessoa@teste.com'
+            'email' => 'codigo_pessoa@teste.com',
         ]);
 
         // Act (Ação): Pedimos ao Service Container do Laravel para nos dar
@@ -40,7 +39,6 @@ class ReplicadoServiceTest extends TestCase
 
     /**
      * Testa se o serviço consegue encontrar um usuário pelo seu 'email'.
-     * @return void
      */
     public function test_ele_encontra_um_usuario_pelo_email(): void
     {
@@ -48,7 +46,7 @@ class ReplicadoServiceTest extends TestCase
         $user = User::factory()->create([
             'codigo_pessoa' => '999999',
             'name' => 'Usuário Teste Email',
-            'email' => 'email.exato@teste.com'
+            'email' => 'email.exato@teste.com',
         ]);
 
         // Act
@@ -62,7 +60,6 @@ class ReplicadoServiceTest extends TestCase
 
     /**
      * Testa se o serviço consegue encontrar um usuário por uma parte do seu 'name'.
-     * @return void
      */
     public function test_ele_encontra_um_usuario_pelo_nome_parcial(): void
     {
@@ -70,7 +67,7 @@ class ReplicadoServiceTest extends TestCase
         $user = User::factory()->create([
             'codigo_pessoa' => '777777',
             'name' => 'Maria Joaquina de Amaral',
-            'email' => 'maria@teste.com'
+            'email' => 'maria@teste.com',
         ]);
 
         // Act: Buscamos por um pedaço do nome
@@ -85,7 +82,6 @@ class ReplicadoServiceTest extends TestCase
 
     /**
      * Testa se o serviço retorna 'null' quando o critério não corresponde a ninguém.
-     * @return void
      */
     public function test_ele_retorna_null_quando_nao_encontra_ninguem(): void
     {

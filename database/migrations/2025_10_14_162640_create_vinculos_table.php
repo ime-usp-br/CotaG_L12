@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('vinculos', function (Blueprint $table) {
             $table->integer('codigo_pessoa');
             $table->foreign('codigo_pessoa')
-                  ->references('codigo_pessoa')
-                  ->on('pessoas')
-                  ->onDelete('cascade');
+                ->references('codigo_pessoa')
+                ->on('pessoas')
+                ->onDelete('cascade');
             $table->string('tipo_vinculo');
             $table->primary(['codigo_pessoa', 'tipo_vinculo']);
             $table->timestamps();

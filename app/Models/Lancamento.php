@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
-
 
 /**
  * Representa um lançamento financeiro.
@@ -20,13 +19,13 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $usuario_id A chave estrangeira para o usuário que registrou.
  * @property Carbon|null $created_at Timestamp de criação do registro.
  * @property Carbon|null $updated_at Timestamp da última atualização do registro.
- *
  * @property-read Pessoa $pessoa A pessoa associada a este lançamento.
  * @property-read User $usuario O usuário que registrou este lançamento.
  */
 class Lancamento extends Model
 {
     use HasFactory;
+
     /**
      * Os atributos que podem ser preenchidos em massa.
      *
@@ -53,7 +52,6 @@ class Lancamento extends Model
     /**
      * Pega o usuário (do sistema) que registrou o lançamento.
      * (Make sure this method exists EXACTLY like this)
-     * @return BelongsTo
      */
     public function usuario(): BelongsTo // <-- MUST be named 'usuario' (lowercase 'u')
     {
@@ -68,12 +66,11 @@ class Lancamento extends Model
      * Este é um Query Scope do Eloquent, que pode ser usado como ->mesAtual().
      * A consulta usa a coluna 'data' para a filtragem.
      *
-     * @param  Builder  $query O construtor de consultas do Eloquent.
-     * @return Builder
+     * @param  Builder  $query  O construtor de consultas do Eloquent.
      */
     public function scopeMesAtual(Builder $query): Builder
     {
         return $query->whereYear('data', Carbon::now()->year)
-                     ->whereMonth('data', Carbon::now()->month);
+            ->whereMonth('data', Carbon::now()->month);
     }
 }

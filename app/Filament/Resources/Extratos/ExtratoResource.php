@@ -2,22 +2,18 @@
 
 namespace App\Filament\Resources\Extratos;
 
-use App\Filament\Resources\Extratos\Pages\CreateExtrato;
-use App\Filament\Resources\Extratos\Pages\EditExtrato;
-use App\Filament\Resources\Extratos\Pages\ListExtratos;
-use App\Filament\Resources\Extratos\Schemas\ExtratoForm;
 use App\Filament\Resources\Extratos\Tables\ExtratosTable;
-use App\Models\Extrato;
+use App\Models\Lancamento;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use App\Models\Lancamento;
 
 class ExtratoResource extends Resource
 {
     protected static ?string $model = Lancamento::class;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     /**
      * Como é read-only, não precisamos de um formulário.

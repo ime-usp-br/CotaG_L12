@@ -21,7 +21,7 @@ class CotaServiceTest extends TestCase
     /**
      * Prepara o ambiente de teste pegando uma instância do serviço.
      */
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         // Pedimos ao Laravel uma instância do nosso serviço
@@ -37,9 +37,9 @@ class CotaServiceTest extends TestCase
         $pessoa = Pessoa::factory()->create();
         CotaEspecial::factory()->create([
             'codigo_pessoa' => $pessoa->codigo_pessoa,
-            'valor' => 1000 // Cota Base = 1000
+            'valor' => 1000, // Cota Base = 1000
         ]);
-        
+
         // Lançamento de débito (tipo 1) este mês
         Lancamento::factory()->create([
             'codigo_pessoa' => $pessoa->codigo_pessoa,
@@ -62,15 +62,15 @@ class CotaServiceTest extends TestCase
     {
         // Arrange
         $pessoa = Pessoa::factory()->create();
-        
+
         // Criamos as cotas padrão que existem no sistema
         Cota::factory()->create(['tipo_vinculo' => 'ALUNO', 'valor' => 200]);
         Cota::factory()->create(['tipo_vinculo' => 'SERVIDOR', 'valor' => 500]);
-        
+
         // Damos um vínculo de ALUNO para a pessoa
         Vinculo::factory()->create([
             'codigo_pessoa' => $pessoa->codigo_pessoa,
-            'tipo_vinculo' => 'ALUNO' // Cota Base = 200
+            'tipo_vinculo' => 'ALUNO', // Cota Base = 200
         ]);
 
         // Lançamento de débito (tipo 1) este mês
@@ -97,7 +97,7 @@ class CotaServiceTest extends TestCase
         $pessoa = Pessoa::factory()->create();
         Cota::factory()->create(['tipo_vinculo' => 'ALUNO', 'valor' => 200]);
         Cota::factory()->create(['tipo_vinculo' => 'SERVIDOR', 'valor' => 500]);
-        
+
         // A pessoa tem AMBOS os vínculos
         Vinculo::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'tipo_vinculo' => 'ALUNO']);
         Vinculo::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'tipo_vinculo' => 'SERVIDOR']);
@@ -119,10 +119,10 @@ class CotaServiceTest extends TestCase
     {
         // Arrange
         $pessoa = Pessoa::factory()->create();
-        
+
         // Tem cota especial (1000)
         CotaEspecial::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 1000]);
-        
+
         // Mas também tem vínculo de servidor (cota 500)
         Cota::factory()->create(['tipo_vinculo' => 'SERVIDOR', 'valor' => 500]);
         Vinculo::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'tipo_vinculo' => 'SERVIDOR']);
@@ -144,10 +144,10 @@ class CotaServiceTest extends TestCase
         // Arrange
         $pessoa = Pessoa::factory()->create();
         CotaEspecial::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 1000]); // Cota = 1000
-        
+
         // Lançamento DESTE mês
         Lancamento::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 100, 'tipo_lancamento' => 1, 'data' => now()]);
-        
+
         // Lançamento do MÊS PASSADO
         Lancamento::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 500, 'tipo_lancamento' => 1, 'data' => now()->subMonth()]);
 
@@ -166,10 +166,10 @@ class CotaServiceTest extends TestCase
         // Arrange
         $pessoa = Pessoa::factory()->create();
         CotaEspecial::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 1000]); // Cota = 1000
-        
+
         // Lançamento de DÉBITO (tipo 1)
         Lancamento::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 100, 'tipo_lancamento' => 1, 'data' => now()]);
-        
+
         // Lançamento de CRÉDITO (tipo 0)
         Lancamento::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 500, 'tipo_lancamento' => 0, 'data' => now()]);
 
@@ -188,7 +188,7 @@ class CotaServiceTest extends TestCase
         // Arrange
         $pessoa = Pessoa::factory()->create();
         // Esta pessoa não tem CotaEspecial nem Vínculo
-        
+
         // Mas ela tem um lançamento de débito (situação estranha, mas o serviço deve lidar)
         Lancamento::factory()->create(['codigo_pessoa' => $pessoa->codigo_pessoa, 'valor' => 50, 'tipo_lancamento' => 1, 'data' => now()]);
 

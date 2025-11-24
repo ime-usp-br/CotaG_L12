@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Livewire\Lancamento\ManageLancamentos;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -9,16 +9,18 @@ Route::get('/', function () {
         if ($user->hasRole('Operador') || $user->hasRole('Admin')) {
             return redirect()->route('lancamento');
         }
+
         return redirect()->route('dashboard');
     }
+
     return view('welcome');
 });
 
 Route::get('/lancamento', ManageLancamentos::class)
     ->middleware([
-        'auth', // Protege contra visitantes 
+        'auth', // Protege contra visitantes
         'verified', // Garante que o e-mail do usuário foi verificado
-        'can:operar-sistema' // Protege por permissão 
+        'can:operar-sistema', // Protege por permissão
     ])
     ->name('lancamento');
 

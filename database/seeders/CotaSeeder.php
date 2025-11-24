@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\Cota; // Importe o Model
+use App\Models\Cota;
+use Illuminate\Database\Seeder; // Importe o Model
 
 class CotaSeeder extends Seeder
 {
@@ -15,7 +14,7 @@ class CotaSeeder extends Seeder
     {
         // Use updateOrCreate para definir as regras de negócio
         // O CotaService vai ler estes valores.
-        
+
         // Simulação 1: Cota de Aluno de Graduação (do seu NUSP de teste)
         Cota::updateOrCreate(
             ['tipo_vinculo' => 'ALUNOGR'], // Chave
@@ -33,7 +32,7 @@ class CotaSeeder extends Seeder
             ['tipo_vinculo' => 'DOCENTE'],
             ['valor' => 1000]
         );
-        
+
         // Simulação 4: Aluno de Pós-Graduação
         Cota::updateOrCreate(
             ['tipo_vinculo' => 'ALUNOPOS'],

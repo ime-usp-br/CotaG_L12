@@ -128,6 +128,6 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s');
-            //->strictAuthorization();
+        // ->strictAuthorization();
     }
 }

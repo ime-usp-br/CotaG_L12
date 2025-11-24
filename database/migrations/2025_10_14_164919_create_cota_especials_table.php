@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->integer('codigo_pessoa');
             $table->foreign('codigo_pessoa')
-                  ->references('codigo_pessoa')
-                  ->on('pessoas')
-                  ->onDelete('cascade');
+                ->references('codigo_pessoa')
+                ->on('pessoas')
+                ->onDelete('cascade');
             $table->integer('valor');
             $table->timestamps();
         });
