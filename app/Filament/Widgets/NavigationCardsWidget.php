@@ -80,14 +80,6 @@ class NavigationCardsWidget extends Widget
             'color' => 'teal', // <-- Cor de informação (verde-azulado)
             'stats' => \App\Models\Lancamento::count(),
         ],
-        [
-            'title' => 'Realizar Lançamento', 
-            'description' => 'Realizar débitos e créditos de impressão',
-            'icon' => 'heroicon-o-arrows-right-left', 
-            'url' => route('lancamento'), 
-            'color' => 'indigo', // <-- Cor de ação principal (azul-escuro/roxo)
-            'stats' => \App\Models\Lancamento::count(),
-        ],
         ];
     }
 }
