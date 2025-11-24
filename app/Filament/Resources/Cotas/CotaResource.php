@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Cotas;
 
+use App\Filament\Resources\RelationManagers\AuditsRelationManager;
 use App\Filament\Resources\Cotas\Pages\CreateCota;
 use App\Filament\Resources\Cotas\Pages\EditCota;
 use App\Filament\Resources\Cotas\Pages\ListCotas;
@@ -33,7 +34,7 @@ class CotaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuditsRelationManager::class,
         ];
     }
 
