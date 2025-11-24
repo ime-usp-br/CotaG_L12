@@ -23,8 +23,6 @@ class User extends Authenticatable implements Auditable, FilamentUser, MustVerif
 
     /**
      * Os grupos aos quais o usuário pertence.
-     *
-     * @return BelongsToMany
      */
     public function grupos(): BelongsToMany
     {

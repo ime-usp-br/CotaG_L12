@@ -1,19 +1,18 @@
 <?php
 
 namespace App\Livewire\Lancamento;
-use App\Services\ReplicadoService;
+
+use App\Exceptions\ReplicadoServiceException;
 use App\Models\Pessoa;
 use App\Models\Vinculo;
-use App\Models\Lancamento;
 use App\Services\CotaService;
+use App\Services\ReplicadoService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
-use App\Exceptions\ReplicadoServiceException;
-use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Rule;
-use Livewire\WithPagination;
-
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ManageLancamentos extends Component
 {
@@ -21,14 +20,20 @@ class ManageLancamentos extends Component
 
     // Propriedades da Busca
     public string $termoBusca = '';
+
     public string $termoBuscado = '';
+
     public ?Collection $resultadosBusca = null;
-    
+
     // Propriedades da Pessoa Selecionada (Layout da Imagem)
-    public ?Pessoa $pessoaSelecionada = null; 
+    public ?Pessoa $pessoaSelecionada = null;
+
     public ?int $saldoAtual = null;
+
     public ?int $cotaBase = null;
+
     public ?int $cotaEspecial = null;
+
     public ?Collection $vinculos = null;
     // public ?Collection $lancamentosMes = null;
 
@@ -36,8 +41,8 @@ class ManageLancamentos extends Component
     public bool $showLancamentoModal = false;
 
     // Título do modal (ex: "Registrar Débito")
-    public string $modalLancamentoTipo = ''; 
-    
+    public string $modalLancamentoTipo = '';
+
     /**
      * Critério 1 e 4: Propriedade para o valor, com validação nativa.
      */
@@ -58,8 +63,8 @@ class ManageLancamentos extends Component
     {
         // Limpa tudo
         $this->reset(
-            'termoBusca', 'termoBuscado', 'resultadosBusca', 
-            'pessoaSelecionada', 'saldoAtual', 'cotaBase', 
+            'termoBusca', 'termoBuscado', 'resultadosBusca',
+            'pessoaSelecionada', 'saldoAtual', 'cotaBase',
             'cotaEspecial', 'vinculos', 'valorLancamento'
         );
         $this->resetErrorBag(); // Limpa erros de validação
@@ -73,7 +78,7 @@ class ManageLancamentos extends Component
     {
         // Encontra a pessoa no banco local
         $this->pessoaSelecionada = Pessoa::find($codigoPessoa);
-        
+
         if ($this->pessoaSelecionada) {
             // Carrega os dados para o layout da imagem
             $this->saldoAtual = $this->pessoaSelecionada->saldo; // Usa o Accessor
@@ -111,9 +116,9 @@ class ManageLancamentos extends Component
         // Sincroniza os vínculos
         $vinculosReplicado = $dadosReplicado['vinculos'] ?? [];
         $vinculosAtuais = [];
-        if (!empty($vinculosReplicado)) {
+        if (! empty($vinculosReplicado)) {
             foreach ($vinculosReplicado as $vinculo) {
-                if (is_string($vinculo) && !empty($vinculo)) {
+                if (is_string($vinculo) && ! empty($vinculo)) {
                     $vinculosAtuais[] = $vinculo;
                     Vinculo::firstOrCreate(
                         ['codigo_pessoa' => $codpes, 'tipo_vinculo' => $vinculo]
@@ -123,7 +128,7 @@ class ManageLancamentos extends Component
         }
         // Remove vínculos locais que não estão mais ativos no Replicado
         Vinculo::where('codigo_pessoa', $codpes)->whereNotIn('tipo_vinculo', $vinculosAtuais)->delete();
-        
+
         return $pessoaLocal;
     }
 
@@ -140,7 +145,7 @@ class ManageLancamentos extends Component
                 'termoBusca.min' => 'Digite pelo menos 3 caracteres para buscar.',
             ]
         );
-        
+
         $this->reset('resultadosBusca', 'pessoaSelecionada', 'saldoAtual');
         $criterio = trim($this->termoBusca);
 
@@ -148,7 +153,7 @@ class ManageLancamentos extends Component
         $pessoasLocais = Pessoa::query()
             ->where(function (Builder $query) use ($criterio) {
                 $query->where('codigo_pessoa', $criterio)
-                    ->orWhere('nome_pessoa', 'like', '%' . $criterio . '%');
+                    ->orWhere('nome_pessoa', 'like', '%'.$criterio.'%');
             })
             ->get();
 
@@ -158,6 +163,7 @@ class ManageLancamentos extends Component
             } else {
                 $this->resultadosBusca = $pessoasLocais;
             }
+
             return;
         }
 
@@ -166,21 +172,27 @@ class ManageLancamentos extends Component
         try {
             if (is_numeric($criterio)) {
                 $pessoaDados = $replicadoService->buscarPessoaPorCodpes($criterio);
-                if ($pessoaDados) $pessoasEncontradasReplicado[] = $pessoaDados;
+                if ($pessoaDados) {
+                    $pessoasEncontradasReplicado[] = $pessoaDados;
+                }
             } elseif (str_contains($criterio, '@')) {
                 $pessoaDados = $replicadoService->buscarPessoaPorEmail($criterio);
-                if ($pessoaDados) $pessoasEncontradasReplicado[] = $pessoaDados;
+                if ($pessoaDados) {
+                    $pessoasEncontradasReplicado[] = $pessoaDados;
+                }
             } else {
                 $pessoasEncontradasReplicado = $replicadoService->buscarPessoasPorNome($criterio);
             }
         } catch (ReplicadoServiceException $e) {
-            Log::error('Erro ao buscar no Replicado: ' . $e->getMessage());
+            Log::error('Erro ao buscar no Replicado: '.$e->getMessage());
             $this->addError('termoBusca', 'Falha na comunicação com o banco de dados Replicado. Tente novamente mais tarde.');
+
             return;
         }
 
         if (empty($pessoasEncontradasReplicado)) {
             $this->addError('termoBusca', 'Nenhuma pessoa encontrada com este critério (nem local, nem no Replicado).');
+
             return;
         }
 
@@ -188,11 +200,12 @@ class ManageLancamentos extends Component
         if (count($pessoasEncontradasReplicado) === 1) {
             $pessoaLocal = $this->importarPessoa($pessoasEncontradasReplicado[0]);
             $this->selecionarPessoa($pessoaLocal->codigo_pessoa, $cotaService);
+
             return;
         }
-        
+
         if (count($pessoasEncontradasReplicado) > 1) {
-            $pessoasLocais = new Collection();
+            $pessoasLocais = new Collection;
             foreach ($pessoasEncontradasReplicado as $dadosPessoa) {
                 $pessoaLocal = $this->importarPessoa($dadosPessoa);
                 $pessoasLocais->push($pessoaLocal);
@@ -216,10 +229,10 @@ class ManageLancamentos extends Component
     {
         $this->resetErrorBag(); // Limpa erros de validação anteriores
         $this->reset('valorLancamento'); // Limpa o valor
-        
+
         $this->tipoLancamento = $tipo;
         $this->modalLancamentoTipo = ($tipo == 1) ? 'Débito' : 'Crédito'; // 1 = Débito, 0 = Crédito
-        
+
         $this->showLancamentoModal = true;
     }
 
@@ -244,8 +257,9 @@ class ManageLancamentos extends Component
         $this->validateOnly('valorLancamento');
 
         // 2. Verifica se a pessoa e o tipo estão definidos
-        if (!$this->pessoaSelecionada || $this->tipoLancamento === null) {
+        if (! $this->pessoaSelecionada || $this->tipoLancamento === null) {
             $this->dispatch('alert', 'Erro: Sessão inválida ou pessoa não selecionada.');
+
             return;
         }
 
@@ -257,28 +271,28 @@ class ManageLancamentos extends Component
             $this->tipoLancamento,
             auth()->id() // Passa o ID do operador logado
         );
-        
+
         // 4. Recarrega todos os dados da pessoa (saldo, histórico)
         $this->selecionarPessoa($this->pessoaSelecionada->codigo_pessoa, $cotaService);
-        
+
         // 5. Fecha o modal
         $this->fecharModal();
-        
+
         // 6. Mostra uma notificação de sucesso
         $this->dispatch('alert', 'Lançamento realizado com sucesso!');
     }
-    
+
     public function render()
     {
         return view('livewire.lancamento.manage-lancamentos', [
             // Passa os lançamentos paginados para a view
             'lancamentosMes' => $this->pessoaSelecionada
                 ? $this->pessoaSelecionada->lancamentos()
-                        ->whereYear('data', now()->year)
-                        ->whereMonth('data', now()->month)
-                        ->with('usuario')
-                        ->orderBy('data', 'desc')
-                        ->paginate(5) // <-- Paginar por 5
+                    ->whereYear('data', now()->year)
+                    ->whereMonth('data', now()->month)
+                    ->with('usuario')
+                    ->orderBy('data', 'desc')
+                    ->paginate(5) // <-- Paginar por 5
                 : null, // Passa null se ninguém estiver selecionado
         ])->layout('layouts.app');
     }

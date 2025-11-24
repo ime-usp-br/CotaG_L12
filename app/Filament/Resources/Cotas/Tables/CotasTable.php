@@ -25,13 +25,13 @@ class CotasTable
                     ->label('Cota')
                     ->numeric()
                     ->sortable(),
-                
+
                 // Coluna de data (bom ter)
                 TextColumn::make('created_at')
                     ->label('Criado em')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true), 
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

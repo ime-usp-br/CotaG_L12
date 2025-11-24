@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -25,7 +25,7 @@ class RoleSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permOperar = Permission::firstOrCreate(['name' => 'operar-sistema', 'guard_name' => 'web']);
-        
+
         // Create roles for local authentication
         Role::firstOrCreate(['name' => 'usp_user', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'external_user', 'guard_name' => 'web']);
@@ -33,7 +33,7 @@ class RoleSeeder extends Seeder
         // Admin role for Filament panel access
         $roleAdmin = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
         $roleOperador = Role::firstOrCreate(['name' => 'Operador', 'guard_name' => 'web']);
-        
+
         // 3. Atribua a permissão aos papéis que podem operar o sistema
         $roleAdmin->givePermissionTo($permOperar);
         $roleOperador->givePermissionTo($permOperar);

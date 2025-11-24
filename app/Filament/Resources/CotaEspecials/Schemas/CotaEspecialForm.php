@@ -12,7 +12,7 @@ class CotaEspecialForm
         return $schema
             ->components([
                 // Campo de Texto (Numérico) para digitar o Número USP
-                TextInput::make('codigo_pessoa') 
+                TextInput::make('codigo_pessoa')
                     ->label('Número USP')
                     ->numeric() // Garante que apenas números sejam digitados
                     ->required()

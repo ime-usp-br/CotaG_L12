@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Representa uma cota especial para uma pessoa.
@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int $valor O valor da cota especial.
  * @property Carbon|null $created_at Timestamp de criação do registro.
  * @property Carbon|null $updated_at Timestamp da última atualização do registro.
- *
  * @property-read Pessoa $pessoa A pessoa à qual esta cota pertence.
  */
 class CotaEspecial extends Model

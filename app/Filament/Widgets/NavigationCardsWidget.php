@@ -3,14 +3,13 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\AuditResource;
+use App\Filament\Resources\CotaEspecials\CotaEspecialResource;
+use App\Filament\Resources\Cotas\CotaResource;
+use App\Filament\Resources\Extratos\ExtratoResource;
 use App\Filament\Resources\Permissions\PermissionResource;
 use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\Users\UserResource;
-use App\Filament\Resources\Cotas\CotaResource;
-use App\Filament\Resources\CotaEspecials\CotaEspecialResource;
-use App\Filament\Resources\Extratos\ExtratoResource;
 use Filament\Widgets\Widget;
-use Illuminate\Support\HtmlString;
 
 class NavigationCardsWidget extends Widget
 {
@@ -57,29 +56,29 @@ class NavigationCardsWidget extends Widget
                 'stats' => \OwenIt\Auditing\Models\Audit::count(),
             ],
             [
-            'title' => 'Cotas',
-            'description' => 'Gerenciar cotas padrão de impressão',
-            'icon' => 'heroicon-o-rectangle-stack', 
-            'url' => CotaResource::getUrl('index'), 
-            'color' => 'gray', // <-- Cor neutra (cinzento)
-            'stats' => \App\Models\Cota::count(),
-        ],
-        [
-            'title' => 'Cotas Especiais',
-            'description' => 'Gerenciar cotas de exceção por pessoa',
-            'icon' => 'heroicon-o-star', 
-            'url' => CotaEspecialResource::getUrl('index'), 
-            'color' => 'fuchsia', // <-- Cor de destaque (rosa/roxo)
-            'stats' => \App\Models\CotaEspecial::count(),
-        ],
-        [
-            'title' => 'Extrato',
-            'description' => 'Gerenciar extratos gerais e/ou mensais',
-            'icon' => 'heroicon-o-clipboard-document-list', 
-            'url' => ExtratoResource::getUrl('index'), 
-            'color' => 'teal', // <-- Cor de informação (verde-azulado)
-            'stats' => \App\Models\Lancamento::count(),
-        ],
+                'title' => 'Cotas',
+                'description' => 'Gerenciar cotas padrão de impressão',
+                'icon' => 'heroicon-o-rectangle-stack',
+                'url' => CotaResource::getUrl('index'),
+                'color' => 'gray', // <-- Cor neutra (cinzento)
+                'stats' => \App\Models\Cota::count(),
+            ],
+            [
+                'title' => 'Cotas Especiais',
+                'description' => 'Gerenciar cotas de exceção por pessoa',
+                'icon' => 'heroicon-o-star',
+                'url' => CotaEspecialResource::getUrl('index'),
+                'color' => 'fuchsia', // <-- Cor de destaque (rosa/roxo)
+                'stats' => \App\Models\CotaEspecial::count(),
+            ],
+            [
+                'title' => 'Extrato',
+                'description' => 'Gerenciar extratos gerais e/ou mensais',
+                'icon' => 'heroicon-o-clipboard-document-list',
+                'url' => ExtratoResource::getUrl('index'),
+                'color' => 'teal', // <-- Cor de informação (verde-azulado)
+                'stats' => \App\Models\Lancamento::count(),
+            ],
         ];
     }
 }

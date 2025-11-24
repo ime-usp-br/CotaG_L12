@@ -2,16 +2,15 @@
 
 namespace App\Filament\Resources\Extratos\Tables;
 
-use App\Models\Lancamento; // Modelo base
+// Modelo base
 use App\Models\Pessoa; // Para o filtro
-use App\Models\User; // Para o filtro
+// Para o filtro
 use Filament\Forms\Components\DatePicker; // Para o filtro de data
 use Filament\Tables;
 use Filament\Tables\Filters\Filter; // Filtro customizado
 use Filament\Tables\Filters\SelectFilter; // Filtro de Select
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder; // Para a query do filtro
-use Filament\Actions\ViewAction;
 
 class ExtratosTable
 {
@@ -75,7 +74,7 @@ class ExtratosTable
                     ->searchable()
                     ->preload()
                     ->label('Operador'),
-                
+
                 // Filtro por Intervalo de Data
                 Filter::make('data_intervalo')
                     ->form([
@@ -105,7 +104,7 @@ class ExtratosTable
                 // Nenhuma ação em massa (read-only)
             ])
             ->headerActions([
-                 // Nenhuma ação no cabeçalho (sem botão Create)
+                // Nenhuma ação no cabeçalho (sem botão Create)
             ]);
     }
 }

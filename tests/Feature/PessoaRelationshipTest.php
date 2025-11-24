@@ -19,14 +19,13 @@ class PessoaRelationshipTest extends TestCase
     /**
      * Testa se uma pessoa pode ter muitos lançamentos.
      * O nome do método deve começar com "test".
-     * @return void
      */
     public function test_uma_pessoa_pode_ter_muitos_lancamentos(): void
     {
         // Arrange: Preparamos o cenário
         $pessoa = Pessoa::factory()->create();
         Lancamento::factory()->count(3)->create([
-            'codigo_pessoa' => $pessoa->codigo_pessoa
+            'codigo_pessoa' => $pessoa->codigo_pessoa,
         ]);
 
         // Act: Executamos a ação que queremos testar
@@ -40,14 +39,13 @@ class PessoaRelationshipTest extends TestCase
 
     /**
      * Testa se um lançamento pertence a uma pessoa.
-     * @return void
      */
     public function test_um_lancamento_pertence_a_uma_pessoa(): void
     {
         // Arrange
         $pessoa = Pessoa::factory()->create();
         $lancamento = Lancamento::factory()->create([
-            'codigo_pessoa' => $pessoa->codigo_pessoa
+            'codigo_pessoa' => $pessoa->codigo_pessoa,
         ]);
 
         // Act
@@ -60,14 +58,13 @@ class PessoaRelationshipTest extends TestCase
 
     /**
      * Testa se uma pessoa pode ter uma cota especial.
-     * @return void
      */
     public function test_uma_pessoa_pode_ter_uma_cota_especial(): void
     {
         // Arrange
         $pessoa = Pessoa::factory()->create();
         CotaEspecial::factory()->create([
-            'codigo_pessoa' => $pessoa->codigo_pessoa
+            'codigo_pessoa' => $pessoa->codigo_pessoa,
         ]);
 
         // Act
@@ -79,14 +76,13 @@ class PessoaRelationshipTest extends TestCase
 
     /**
      * Testa se uma cota especial pertence a uma pessoa.
-     * @return void
      */
     public function test_uma_cota_especial_pertence_a_uma_pessoa(): void
     {
         // Arrange
         $pessoa = Pessoa::factory()->create();
         $cota = CotaEspecial::factory()->create([
-            'codigo_pessoa' => $pessoa->codigo_pessoa
+            'codigo_pessoa' => $pessoa->codigo_pessoa,
         ]);
 
         // Act
@@ -99,7 +95,6 @@ class PessoaRelationshipTest extends TestCase
 
     /**
      * Testa se uma pessoa pode ter muitos vínculos.
-     * @return void
      */
     public function test_uma_pessoa_pode_ter_muitos_vinculos(): void
     {
@@ -108,11 +103,11 @@ class PessoaRelationshipTest extends TestCase
         // Criamos 2 vínculos com tipo_vinculo diferentes para a mesma pessoa
         Vinculo::factory()->create([
             'codigo_pessoa' => $pessoa->codigo_pessoa,
-            'tipo_vinculo' => 'ALUNO'
+            'tipo_vinculo' => 'ALUNO',
         ]);
         Vinculo::factory()->create([
             'codigo_pessoa' => $pessoa->codigo_pessoa,
-            'tipo_vinculo' => 'SERVIDOR'
+            'tipo_vinculo' => 'SERVIDOR',
         ]);
 
         // Act
@@ -126,7 +121,6 @@ class PessoaRelationshipTest extends TestCase
 
     /**
      * Testa se um vínculo pertence a uma pessoa.
-     * @return void
      */
     public function test_um_vinculo_pertence_a_uma_pessoa(): void
     {

@@ -2,23 +2,22 @@
 
 namespace App\Providers;
 
+use App\Models\Cota;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\Cota;
 use App\Observers\PermissionObserver;
 use App\Observers\RoleObserver;
 use App\Policies\AuditPolicy;
+use App\Policies\CotaPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
-use App\Policies\CotaPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-use OwenIt\Auditing\Models\Audit;
 use Laravel\Fortify\Contracts\LoginResponse;
-use Illuminate\Http\Request;
+use OwenIt\Auditing\Models\Audit;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -55,10 +54,9 @@ class AppServiceProvider extends ServiceProvider
         Role::observe(RoleObserver::class);
         Permission::observe(PermissionObserver::class);
 
-
-
         $this->app->singleton(LoginResponse::class, function ($app) {
-            return new class implements LoginResponse {
+            return new class implements LoginResponse
+            {
                 public function toResponse($request)
                 {
                     /** @var \App\Models\User $user */
@@ -67,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
                         // Redireciona Operadores para a tela principal da ferramenta
                         return redirect()->route('lancamento');
                     }
+
                     // Redirecionamento padrão para Admin e outros perfis
                     return redirect()->intended(config('fortify.home'));
                 }
@@ -77,7 +76,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             \Filament\Auth\Http\Responses\Contracts\LoginResponse::class,
             function () {
-                return new class implements \Filament\Auth\Http\Responses\Contracts\LoginResponse {
+                return new class implements \Filament\Auth\Http\Responses\Contracts\LoginResponse
+                {
                     public function toResponse($request): \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
                     {
                         return redirect()->route('lancamento');
@@ -87,6 +87,4 @@ class AppServiceProvider extends ServiceProvider
         );
 
     }
-
-    
 }

@@ -18,14 +18,14 @@ return new class extends Migration
             $table->integer('valor');
             $table->integer('codigo_pessoa');
             $table->foreign('codigo_pessoa')
-                  ->references('codigo_pessoa')
-                  ->on('pessoas')
-                  ->onDelete('cascade');
+                ->references('codigo_pessoa')
+                ->on('pessoas')
+                ->onDelete('cascade');
             $table->unsignedBigInteger('usuario_id');
             $table->foreign('usuario_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');  
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }
