@@ -16,12 +16,12 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 'usp-blue-pri': '#1094AB',
                 'usp-blue-sec': '#64C4D2',
-                'usp-yellow': '#FCB421', 
+                'usp-yellow': '#FCB421',
             },
         },
     },
