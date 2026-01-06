@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Cotas;
 
-use App\Filament\Resources\RelationManagers\AuditsRelationManager;
 use App\Filament\Resources\Cotas\Pages\CreateCota;
 use App\Filament\Resources\Cotas\Pages\EditCota;
 use App\Filament\Resources\Cotas\Pages\ListCotas;
 use App\Filament\Resources\Cotas\Schemas\CotaForm;
 use App\Filament\Resources\Cotas\Tables\CotasTable;
+use App\Filament\Resources\RelationManagers\AuditsRelationManager;
 use App\Models\Cota;
 use BackedEnum;
 use Filament\Resources\Resource;
