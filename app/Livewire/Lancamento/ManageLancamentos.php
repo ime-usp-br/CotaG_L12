@@ -133,7 +133,7 @@ class ManageLancamentos extends Component
     }
 
     /**
-     * Lógica de busca principal (Busca Local, depois Replicado).
+     * Lógica de busca principal (Busca Local + Replicado).
      */
     public function buscarPessoa(ReplicadoService $replicadoService, CotaService $cotaService): void
     {
@@ -149,7 +149,7 @@ class ManageLancamentos extends Component
         $this->reset('resultadosBusca', 'pessoaSelecionada', 'saldoAtual');
         $criterio = trim($this->termoBusca);
 
-        // --- ETAPA 1: BUSCA LOCAL PRIMEIRO ---
+        // --- ETAPA 1: BUSCA LOCAL ---
         $pessoasLocais = Pessoa::query()
             ->where(function (Builder $query) use ($criterio) {
                 $query->where('codigo_pessoa', $criterio)
@@ -157,17 +157,7 @@ class ManageLancamentos extends Component
             })
             ->get();
 
-        if ($pessoasLocais->isNotEmpty()) {
-            if ($pessoasLocais->count() === 1) {
-                $this->selecionarPessoa($pessoasLocais->first()->codigo_pessoa, $cotaService);
-            } else {
-                $this->resultadosBusca = $pessoasLocais;
-            }
-
-            return;
-        }
-
-        // --- ETAPA 2: BUSCA NO REPLICADO (Fallback) ---
+        // --- ETAPA 2: BUSCA NO REPLICADO ---
         $pessoasEncontradasReplicado = [];
         try {
             if (is_numeric($criterio)) {
@@ -185,32 +175,52 @@ class ManageLancamentos extends Component
             }
         } catch (ReplicadoServiceException $e) {
             Log::error('Erro ao buscar no Replicado: '.$e->getMessage());
-            $this->addError('termoBusca', 'Falha na comunicação com o banco de dados Replicado. Tente novamente mais tarde.');
+            // Se falhar o replicado mas tiver local, segue com o local.
+            // Se não tiver local, exibe erro.
+            if ($pessoasLocais->isEmpty()) {
+                $this->addError('termoBusca', 'Falha na comunicação com o banco de dados Replicado e nenhum registro local encontrado.');
 
-            return;
+                return;
+            }
         }
 
-        if (empty($pessoasEncontradasReplicado)) {
+        // --- ETAPA 3: UNIFICAÇÃO (Merge) ---
+        // Se não achou nada em nenhum dos dois
+        if ($pessoasLocais->isEmpty() && empty($pessoasEncontradasReplicado)) {
             $this->addError('termoBusca', 'Nenhuma pessoa encontrada com este critério (nem local, nem no Replicado).');
 
             return;
         }
 
-        // --- ETAPA 3: IMPORTAÇÃO E EXIBIÇÃO ---
-        if (count($pessoasEncontradasReplicado) === 1) {
-            $pessoaLocal = $this->importarPessoa($pessoasEncontradasReplicado[0]);
-            $this->selecionarPessoa($pessoaLocal->codigo_pessoa, $cotaService);
+        // Importa/Sincroniza os resultados do Replicado que NÃO estão no Local
+        // (Ou que estão, mas precisamos garantir que temos o objeto Pessoa atualizado/importado)
+        // Estratégia: Pegar todos os codpes locais
+        $codpesLocais = $pessoasLocais->pluck('codigo_pessoa')->toArray();
 
-            return;
+        // Collection final começa com os locais
+        $resultadosUnificados = $pessoasLocais;
+
+        foreach ($pessoasEncontradasReplicado as $dadosPessoa) {
+            $codpes = $dadosPessoa['codpes'];
+
+            // Se já existe na lista local, ignoramos a versão "crua" do Replicado
+            // (Assumimos que o registro local é o preferencial pois já tem ID, etc)
+            if (in_array($codpes, $codpesLocais)) {
+                continue;
+            }
+
+            // Se é novo, importa e adiciona na lista final
+            $pessoaNova = $this->importarPessoa($dadosPessoa);
+            $resultadosUnificados->push($pessoaNova);
         }
 
-        if (count($pessoasEncontradasReplicado) > 1) {
-            $pessoasLocais = new Collection;
-            foreach ($pessoasEncontradasReplicado as $dadosPessoa) {
-                $pessoaLocal = $this->importarPessoa($dadosPessoa);
-                $pessoasLocais->push($pessoaLocal);
-            }
-            $this->resultadosBusca = $pessoasLocais;
+        // --- ETAPA 4: EXIBIÇÃO ---
+        if ($resultadosUnificados->count() === 1) {
+            // Se só sobrou um (seja local ou importado agora), seleciona direto
+            $this->selecionarPessoa($resultadosUnificados->first()->codigo_pessoa, $cotaService);
+        } else {
+            // Se tem vários, exibe para escolha
+            $this->resultadosBusca = $resultadosUnificados;
         }
     }
 

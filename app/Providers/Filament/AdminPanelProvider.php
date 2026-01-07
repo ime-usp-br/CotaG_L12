@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->profile()
+            ->favicon(asset('favicon.png'))
             ->colors([
                 'primary' => Color::hex('#1094AB'), // USP Blue Primary
                 'warning' => Color::hex('#FCB421'), // USP Yellow
