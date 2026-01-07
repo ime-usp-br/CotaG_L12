@@ -12,6 +12,8 @@
 
         <!-- Scripts e Estilos via Vite -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
     </head>
     <body class="font-sans antialiased bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 
