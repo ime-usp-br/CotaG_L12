@@ -24,94 +24,47 @@ class CotaService
      */
     public function registrarDebitoOuCredito(Pessoa $pessoa, int $valor, int $tipo, int $operadorId): void
     {
-        if ($tipo == 0) {
-            // Se for CRÉDITO, apenas crie o lançamento.
-            Lancamento::create([
-                'data' => now(),
-                'tipo_lancamento' => 0,
-                'valor' => $valor,
-                'codigo_pessoa' => $pessoa->codigo_pessoa,
-                'usuario_id' => $operadorId,
-            ]);
+        // Alteração: Não consumimos mais a CotaEspecial destrutivamente.
+        // Apenas registramos o lançamento. O cálculo de saldo (calcularSaldo)
+        // se encarregará de subtrair o total de débitos da cota (Fixa ou Especial).
 
-            return;
-        } else {
-            $this->consumirCotaEspecial($pessoa, $valor);
-
-            Lancamento::create([
-                'data' => now(),
-                'tipo_lancamento' => 1,
-                'valor' => $valor,
-                'codigo_pessoa' => $pessoa->codigo_pessoa,
-                'usuario_id' => $operadorId,
-            ]);
-        }
-    }
-
-    /**
-     * Consome o valor de um débito das cotas especiais da pessoa (FIFO).
-     * Atualiza ou deleta os registros de CotaEspecial no banco.
-     *
-     * @param  int  $valorDebito  O valor total do débito.
-     * @return int O valor do débito que RESTOU após consumir as cotas.
-     */
-    private function consumirCotaEspecial(Pessoa $pessoa, int $valorDebito): int
-    {
-        $cotasEspeciais = CotaEspecial::where('codigo_pessoa', $pessoa->codigo_pessoa)
-            ->orderBy('id', 'asc') // Pega a mais antiga primeiro
-            ->get();
-
-        $debitoRestante = $valorDebito;
-
-        foreach ($cotasEspeciais as $cota) {
-            if ($debitoRestante <= 0) {
-                // O débito já foi totalmente coberto.
-                break;
-            }
-
-            $valorNestaCota = $cota->valor;
-
-            if ($debitoRestante >= $valorNestaCota) {
-                // O débito (ex: 50) é maior que esta cota (ex: 10).
-                // Consome a cota inteira.
-
-                $debitoRestante -= $valorNestaCota; // Débito agora é 40
-                $cota->delete(); // Deleta o registro da cota de 10
-
-            } else {
-                // O débito (ex: 5) é menor que esta cota (ex: 20).
-                // Consome parte da cota.
-
-                $cota->valor -= $debitoRestante; // Cota agora vale 15
-                $cota->save(); // Atualiza o registro no banco
-
-                $debitoRestante = 0; // O débito foi totalmente coberto.
-            }
-        }
-
-        // Retorna o que sobrou do débito, que será descontado da Cota Base.
-        return $debitoRestante;
+        Lancamento::create([
+            'data' => now(),
+            'tipo_lancamento' => $tipo, // 0=Crédito, 1=Débito
+            'valor' => $valor,
+            'codigo_pessoa' => $pessoa->codigo_pessoa,
+            'usuario_id' => $operadorId,
+        ]);
     }
 
     /**
      * Calcula o saldo de impressões restante para uma pessoa no mês corrente.
      *
-     * ESTA LÓGICA AGORA É SIMPLES:
-     * (Cota Base + Cota Especial + Créditos) - Débitos da Cota Base
+     * LÓGICA CORRIGIDA (AGENTE.md 3.1):
+     * 1. Se tiver Cota Especial, usa ela.
+     * 2. Se não, usa Cota Base (Máximo dos Vínculos).
+     * 3. Soma Créditos e subtrai Débitos.
      *
      * @param  Pessoa  $pessoa  O objeto Pessoa para o qual o saldo será calculado.
      * @return int O saldo final de impressões.
      */
     public function calcularSaldo(Pessoa $pessoa): int
     {
-        $cotaBase = $this->getCotaBase($pessoa);
-        $cotaEspecial = $this->getCotaEspecial($pessoa); // Pega o que sobrou
-        $totalCreditos = $this->getCreditos($pessoa);
-        $totalDebitos = $this->getTotalLancamentosMes($pessoa); // Pega só os débitos da cota base
+        $cotaEspecial = $this->getCotaEspecial($pessoa);
 
-        // O saldo é a soma de todas as cotas (Base + Especial + Créditos)
-        // menos a soma de todos os débitos (que agora só afetam a base).
-        $saldo = ($cotaBase + $cotaEspecial + $totalCreditos) - $totalDebitos;
+        // Prioridade: Se existe cota especial (mesmo que 0?), usa ela.
+        // Se retornar null, significa que não tem registro de cota especial.
+        if ($cotaEspecial !== null) {
+            $cotaMes = $cotaEspecial;
+        } else {
+            $cotaMes = $this->getCotaBase($pessoa);
+        }
+
+        $totalCreditos = $this->getCreditos($pessoa);
+        $totalDebitos = $this->getTotalLancamentosMes($pessoa);
+
+        // Saldo = Cota do Mês + Créditos - Débitos
+        $saldo = ($cotaMes + $totalCreditos) - $totalDebitos;
 
         return (int) $saldo;
     }
@@ -137,14 +90,22 @@ class CotaService
     }
 
     /**
-     * Obtém a SOMA de todas as cotas especiais de uma pessoa.
+     * Obtém o valor da Cota Especial, se houver.
+     * Retorna null se não houver registro.
      */
-    public function getCotaEspecial(Pessoa $pessoa): int
+    public function getCotaEspecial(Pessoa $pessoa): ?int
     {
-        $somaCotasEspeciais = CotaEspecial::where('codigo_pessoa', $pessoa->codigo_pessoa)
-            ->sum('valor');
+        // Verifica se existe algum registro
+        $existe = CotaEspecial::where('codigo_pessoa', $pessoa->codigo_pessoa)->exists();
 
-        return (int) $somaCotasEspeciais;
+        if (!$existe) {
+            // Retorna null para indicar que deve usar Cota Base
+            return null;
+        }
+
+        // Se existe, retorna a soma (caso haja multiplas, o que seria estranho, mas somamos).
+        // Normalmente seria um único registro.
+        return (int) CotaEspecial::where('codigo_pessoa', $pessoa->codigo_pessoa)->sum('valor');
     }
 
     /**

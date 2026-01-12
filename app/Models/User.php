@@ -80,7 +80,9 @@ class User extends Authenticatable implements Auditable, FilamentUser, MustVerif
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'admin') {
-            return $this->hasAnyRole('Admin', 'Operador');
+            // Permite acesso para 'ADM' (código novo) e 'Admin' (legado).
+            // Nega explicitamente para outros (ex: Operador/OPR).
+            return $this->hasAnyRole('ADM', 'Admin');
         }
 
         return true;
