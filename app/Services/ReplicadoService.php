@@ -74,6 +74,23 @@ class ReplicadoService
      */
     public function buscarPessoaPorCodpes(string $codpes): ?array
     {
+        // 1. TENTA BUSCAR LOCALMENTE
+        $pessoaLocal = Pessoa::with('vinculos')->where('codigo_pessoa', $codpes)->first();
+
+        if ($pessoaLocal) {
+            // Se achou no banco local, monta o array de retorno com os dados de lá.
+            // A gente "simula" a estrutura do Replicado para o front-end não quebrar.
+            $pessoa = [
+                'codpes' => (int) $pessoaLocal->codigo_pessoa,
+                'nompes' => $pessoaLocal->nome_pessoa,
+                'vinculos' => $pessoaLocal->vinculos->pluck('tipo_vinculo')->toArray(),
+                // 'origem' => 'local', // Debug
+            ];
+
+            return $pessoa;
+        }
+
+        // 2. SE NÃO ENCONTROU LOCALMENTE, BUSCA NO REPLICADO
         $sql = "SELECT TOP(1) P.codpes, COALESCE(P.nomcnhpes, P.nompes) AS nompes 
                 FROM PESSOA P 
                 INNER JOIN VINCULOPESSOAUSP V ON (P.codpes = V.codpes) 
