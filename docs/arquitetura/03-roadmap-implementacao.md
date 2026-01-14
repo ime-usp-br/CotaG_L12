@@ -13,11 +13,9 @@ O roadmap está organizado em módulos que seguem uma ordem lógica de dependên
 ### Módulo 1: Estrutura de Dados e Models (Fundação)
 *(Foco: Estabelecer a base do banco de dados e do Eloquent para suportar todas as outras funcionalidades)*
 
-- [ ] `[FEAT]` Criar migrations para as tabelas de domínio: `pessoas`, `vinculos`, `cotas`, `cotas_especiais`, `lancamentos`.
-- [ ] `[FEAT]` Criar migrations para as tabelas de organização interna: `unidades_organizacionais` (OU) e `grupos`.
+- [ ] `[FEAT]` Criar migrations para as tabelas de domínio: `pessoas` (atenção: PK definida como `codigo_pessoa`), `vinculos`, `cotas`, `cotas_especiais`, `lancamentos`.
 - [ ] `[FEAT]` Criar migration para a tabela de suporte `mensagens`, para registro de comunicações.
-- [ ] `[FEAT]` Criar Models Eloquent (`Pessoa`, `Vinculo`, `Cota`, `CotaEspecial`, `Lancamento`) com seus respectivos relacionamentos (`hasMany`, `belongsTo`, `hasOne`).
-- [ ] `[FEAT]` Criar Models Eloquent (`UnidadeOrganizacional`, `Grupo`, `Mensagem`) com seus respectivos relacionamentos.
+- [ ] `[FEAT]` Criar Models Eloquent (`Pessoa`, `Vinculo`, `Cota`, `CotaEspecial`, `Lancamento`, `Mensagem`) com seus respectivos relacionamentos (`hasMany`, `belongsTo`, `hasOne`).
 - [ ] `[CHORE]` Adaptar a migration e o Model `User` (do Laravel Breeze) para incluir a coluna `codpes` e os relacionamentos necessários.
 - [ ] `[CHORE]` Configurar chaves primárias não-incrementáveis (`public $incrementing = false`) e não-padrão (`$primaryKey`) nos models onde for aplicável (ex: `Pessoa`).
 - [ ] `[TEST]` Escrever testes unitários para validar todos os relacionamentos Eloquent definidos (ex: `Pessoa` tem muitos `Lancamentos`).
@@ -35,11 +33,10 @@ O roadmap está organizado em módulos que seguem uma ordem lógica de dependên
 ### Módulo 3: Interface Administrativa (Filament)
 *(Foco: Criar a área de gestão completa para o perfil Administrador)*
 
-- [ ] `[FEAT]` Estender o `UserResource` do Filament para gerenciar operadores, incluindo o campo `codpes` e a atribuição de papéis e grupos.
+- [ ] `[FEAT]` Estender o `UserResource` do Filament para gerenciar operadores, incluindo o campo `codpes` e a atribuição de papéis.
 - [ ] `[FEAT]` Configurar o `RoleResource` (Spatie Filament Plugin) para permitir o CRUD dos papéis `ADM` e `OPR`.
 - [ ] `[FEAT]` Criar o `CotaResource` para o gerenciamento (CRUD) das cotas padrão por vínculo.
 - [ ] `[FEAT]` Criar o `CotaEspecialResource` para o gerenciamento (CRUD) das cotas de exceção.
-- [ ] `[FEAT]` Criar o `UnidadeOrganizacionalResource` e `GrupoResource` para gerenciar a estrutura organizacional.
 - [ ] `[CHORE]` Integrar o `owen-it/laravel-auditing` e criar um `AuditResource` no Filament para visualizar os logs de auditoria do sistema.
 - [ ] `[FEAT]` Criar um `ExtratoResource` no Filament para a funcionalidade de "Extrato Geral", permitindo a visualização de todos os lançamentos com filtros de data.
 - [ ] `[TEST]` Escrever testes de feature para o `CotaResource` e `CotaEspecialResource`, garantindo que um `ADM` pode criar, editar e deletar cotas.
@@ -51,14 +48,14 @@ O roadmap está organizado em módulos que seguem uma ordem lógica de dependên
 - [ ] `[FEAT]` Implementar a funcionalidade de busca de pessoa na interface, que chama o `ReplicadoService` e exibe os resultados dinamicamente.
 - [ ] `[FEAT]` Ao selecionar uma pessoa, a interface deve exibir seu perfil (nome, Nº USP, vínculos) e seu saldo atual (via `$pessoa->saldo`).
 - [ ] `[FEAT]` Implementar os formulários e ações para registrar Lançamentos de Débito e Crédito.
-- [ ] `[FEAT]` Criar o `StoreLancamentoRequest` para centralizar a validação dos dados de entrada do formulário de lançamento.
+- [ ] `[FEAT]` Implementar a validação dos dados (valor, tipo) diretamente no componente Livewire utilizando atributos `#[Rule]` ou método `validate()`.
 - [ ] `[FEAT]` Exibir a tabela com o histórico de lançamentos da pessoa para o mês corrente, que se atualiza automaticamente via Livewire após cada novo lançamento.
 - [ ] `[TEST]` Escrever testes de feature para o componente `ManageLancamentos`, simulando o fluxo completo: buscar um usuário, ver o saldo, registrar um débito e verificar se o saldo foi atualizado na tela.
 
 ### Módulo 5: Finalização e Migração
 *(Foco: Preparar o sistema para produção e migrar os dados legados)*
 
-- [ ] `[CHORE]` Criar Seeders para popular os dados iniciais de `cotas`, `papeis`, `unidades_organizacionais` e `grupos`.
+- [ ] `[CHORE]` Criar Seeders para popular os dados iniciais de `cotas` e `papeis`.
 - [ ] `[CHORE]` Desenvolver o comando `php artisan cotag:migrate-legacy-data` para executar a migração dos dados transacionais (`PESSOA`, `USUARIO`, `LANCAMENTO`).
 - [ ] `[DOC]` Revisar e finalizar toda a documentação do projeto (`README.md` e outros documentos em `docs/`) com base na implementação final.
 - [ ] `[FIX]` Realizar uma fase de testes manuais e correção de bugs em todas as funcionalidades implementadas.

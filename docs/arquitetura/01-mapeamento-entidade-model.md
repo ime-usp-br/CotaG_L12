@@ -2,62 +2,47 @@
 
 ## 1. Introdução
 
-Este documento define a arquitetura da camada de dados para a nova versão do sistema CotaG, a ser construída sobre o framework Laravel. O principal objetivo é mapear as tabelas do banco de dados legado para Models Eloquent, estabelecendo uma base sólida para o desenvolvimento da aplicação.
+Este documento define a arquitetura da camada de dados para a nova versão do sistema CotaG, construída sobre o framework Laravel 12. O objetivo é documentar o mapeamento oficial das tabelas do banco de dados para Models Eloquent, refletindo a implementação final do projeto.
 
-Esta abordagem formaliza os nomes dos Models, seus atributos, relacionamentos e, crucialmente, documenta as decisões de arquitetura sobre quais funcionalidades legadas serão mantidas e quais serão substituídas por componentes modernos do ecossistema Laravel, como Breeze (autenticação), Spatie/laravel-permission (controle de acesso) e pacotes de auditoria.
+Esta documentação serve como a "fonte da verdade" para a estrutura de dados, consolidando as decisões de design tomadas durante o desenvolvimento, incluindo a adoção de pacotes como `spatie/laravel-permission` e `owen-it/laravel-auditing`.
 
 ## 2. Visão Geral do Esquema
 
-O esquema proposto para a nova aplicação em Laravel classifica as tabelas legadas em três categorias:
+O esquema da aplicação classifica as tabelas em três categorias:
 
-1.  **Entidades de Domínio (Mantidas):** Tabelas que representam o núcleo da lógica de negócio do CotaG, como `PESSOA`, `LANCAMENTO`, `COTA`, `COTA_ESPECIAL` e `VINCULO`. Estas serão mapeadas diretamente para Models Eloquent.
+1.  **Entidades de Domínio (Ativas):** Tabelas que representam o núcleo da lógica de negócio (`pessoas`, `lancamentos`, `cotas`, `cota_especiais`, `vinculos`). Estas possuem Models Eloquent correspondentes.
 
-2.  **Funcionalidades de Framework (Substituídas):** Tabelas cuja funcionalidade é melhor e mais seguramente gerenciada por pacotes padrão do ecossistema Laravel. Isso inclui:
-    * **Autenticação e Acesso (`USUARIO`, `PAPEL`, `USUARIO_PAPEL`, `REQUISICAO_SENHA`, `TOKEN`):** Serão substituídas pelo sistema de `User` do Laravel, integrado com o **Laravel Breeze** (autenticação local), **Laravel Sanctum** (tokens) e **Spatie/laravel-permission** (perfis e permissões).
-    * **Auditoria (`LOG`):** Será substituída por um pacote de auditoria robusto como o `owen-it/laravel-auditing`, que oferece rastreamento automático de alterações nos Models.
+2.  **Funcionalidades de Framework (Pacotes):** Tabelas cuja funcionalidade é gerenciada por pacotes padrão do ecossistema Laravel:
+    *   **Autenticação e Acesso:** `users`, `roles`, `permissions` (gerenciados por Laravel Breeze e Spatie Permission).
+    *   **Auditoria:** `audits` (gerenciado por OwenIt Auditing), substituindo a antiga tabela `LOG`.
 
-3.  **Tabelas Obsoletas (Descartadas):** Tabelas que são resquícios do framework anterior (`hibernate_sequence`) ou que são redundantes na estrutura atual (`PESSOA_LANCAMENTO`). Estas não serão migradas.
+3.  **Entidades Descartadas (Legado):** Tabelas do sistema antigo que foram descontinuadas na nova arquitetura (`OU`, `GRUPO`, `MENSAGEM`, `PESSOA_LANCAMENTO`, `hibernate_sequence`, `REQUISICAO_SENHA`, `TOKEN`, `USUARIO_GRUPO`).
 
 ## 3. Mapeamento das Entidades
 
-A tabela a seguir detalha o mapeamento de cada tabela legada para sua representação na nova arquitetura Laravel.
+A tabela a seguir detalha o mapeamento oficial para a arquitetura Laravel/Filament.
 
-| Tabela Legada | Model Laravel Proposto | Relacionamentos Eloquent | Observações |
+| Tabela (Banco) | Model Laravel (Implementado) | Chaves e Atributos Críticos | Observações |
 | :--- | :--- | :--- | :--- |
-| **USUARIO** | `App\Models\User` | `lancamentosRegistrados(): hasMany(Lancamento::class)`<br>`roles(): belongsToMany(Role::class)` | **Substituído.** Será o model `User` padrão do Laravel/Breeze, já com o trait `HasRoles`. A tabela `users` será customizada para incluir `codpes`. A coluna `salt` é obsoleta. |
-| **PAPEL**, **USUARIO_PAPEL** | `Spatie\Permission\Models\Role` | `users(): belongsToMany(User::class)` | **Substituído.** A gestão de perfis (`ADM`, `OPR`) e a tabela pivô serão inteiramente gerenciadas pelo pacote `spatie/laravel-permission`. |
-| **REQUISICAO_SENHA** | N/A | N/A | **Substituído.** A funcionalidade "Esqueci minha Senha" será gerenciada pela tabela `password_reset_tokens` nativa do Laravel Breeze. |
-| **TOKEN** | N/A | N/A | **Substituído.** A gestão de tokens de sessão persistente ou API será gerenciada pelo Laravel Sanctum, que acompanha o Breeze. |
-| **LOG** | `OwenIt\Auditing\Models\Audit` | `user(): belongsTo(User::class)` | **Substituído.** Será substituído pelo sistema de auditoria do pacote `owen-it/laravel-auditing`, que rastreia alterações nos Models automaticamente. |
-| **PESSOA** | `App\Models\Pessoa` | `lancamentos(): hasMany(Lancamento::class)`<br>`cotaEspecial(): hasOne(CotaEspecial::class)`<br>`vinculos(): hasMany(Vinculo::class)` | **Mantido.** Entidade central do negócio. Chave primária (`codpes`) não é auto-incrementável (`public $incrementing = false`). |
-| **LANCAMENTO** | `App\Models\Lancamento` | `pessoa(): belongsTo(Pessoa::class)`<br>`operador(): belongsTo(User::class)` | **Mantido.** Registra todas as transações de débito e crédito. |
-| **COTA** | `App\Models\Cota` | - | **Mantido.** Armazena as regras de cotas padrão por vínculo. O relacionamento com `Vinculo` é lógico, não por FK. |
-| **COTA_ESPECIAL** | `App\Models\CotaEspecial` | `pessoa(): belongsTo(Pessoa::class)` | **Mantido.** Cota de exceção para um indivíduo. |
-| **VINCULO** | `App\Models\Vinculo` | `pessoa(): belongsTo(Pessoa::class)` | **Mantido.** Representa as relações de uma `Pessoa` com a instituição. |
-| **OU**, **GRUPO**, **USUARIO_GRUPO** | `App\Models\UnidadeOrganizacional`<br>`App\Models\Grupo` | `grupos(): hasMany(Grupo::class)`<br>`unidadeOrganizacional(): belongsTo(Unidade...)`<br>`usuarios(): belongsToMany(User::class)` | **Mantidos.** Estrutura de organização interna dos operadores do sistema. Os nomes dos Models foram melhorados para maior clareza. |
-| **MENSAGEM** | `App\Models\Mensagem` | - | **Mantido.** Pode ser integrado com o sistema de `Mailable` e `Notifications` do Laravel para registrar e-mails transacionais enviados. |
-| **PESSOA_LANCAMENTO** | N/A | N/A | **Descartado.** Tabela redundante na lógica de negócio. A relação já é estabelecida pela FK `pessoa_codpes` na tabela `LANCAMENTO`. |
-| **hibernate_sequence** | N/A | N/A | **Descartado.** Tabela utilitária específica do framework Java/Hibernate. Não será migrada. |
+| **pessoas** | `App\Models\Pessoa` | **PK:** `codigo_pessoa` (int, não-incremental)<br>**Atributos:** `nome_pessoa`<br>**Relações:** `vinculos()`, `lancamentos()`, `cotaEspecial()` | Entidade central. Utiliza `codigo_pessoa` como chave primária manual para manter consistência com dados legados/Replicado. |
+| **vinculos** | `App\Models\Vinculo` | **PK Composta:** `['codigo_pessoa', 'tipo_vinculo']`<br>**Atributos:** `tipo_vinculo` | Tabela de associação (não JSON). Mapeia os vínculos ativos de uma pessoa com a instituição. |
+| **lancamentos** | `App\Models\Lancamento` | **PK:** `id`<br>**FKs:** `codigo_pessoa`, `usuario_id`<br>**Atributos:** `valor`, `tipo_lancamento` (0=Créd, 1=Déb), `data` | Registra transações. Possui Query Scope `scopeMesAtual` para regras de cota. O campo `usuario_id` liga ao operador (`User`). |
+| **cotas** | `App\Models\Cota` | **PK:** `id`<br>**Atributos:** `tipo_vinculo`, `valor` | Define a regra de quantidade de cópias padrão para cada tipo de vínculo (ex: DOCENTE = 300). |
+| **cota_especiais** | `App\Models\CotaEspecial` | **PK:** `id`<br>**FK:** `codigo_pessoa`<br>**Atributos:** `valor` | Exceções à regra padrão. Se existir para uma pessoa, sobrepõe a cota do vínculo. |
+| **users** | `App\Models\User` | **PK:** `id`<br>**Atributos:** `codpes`, `name`, `email` | Usuário operador do sistema. Utiliza Traits `HasRoles` (Spatie) e `HasSenhaunica` (USP). Substitui a tabela `USUARIO` antiga. |
+| **roles** | `App\Models\Role` | **PK:** `id`<br>**Atributos:** `name`, `guard_name` | Gerenciado pelo pacote `spatie/laravel-permission`. Define perfis como `ADM` e `OPR`. Substitui `PAPEL`. |
+| **audits** | `OwenIt\Auditing\Models\Audit` | **PK:** `id`<br>**Polimórfico:** `auditable_type`, `auditable_id` | Rastreamento automático de alterações em Models. Substitui a tabela `LOG`. |
 
-## 4. Estratégia de Migração de Dados
+## 4. Entidades Descartadas e Removidas
 
-A transição dos dados do banco de dados legado para a nova estrutura Laravel seguirá uma abordagem em fases:
+As seguintes tabelas/entidades constavam no sistema legado mas **NÃO fazem parte** da nova arquitetura:
 
-1.  **Criação de Seeders para Dados de Configuração:** Dados de tabelas de "regras", como `COTA`, `PAPEL` e `OU`, serão migrados através de **Seeders** do Laravel. Esses dados são relativamente estáticos e essenciais para a configuração inicial do sistema.
-
-2.  **Comando de Migração Customizado para Dados Transacionais:** Para entidades complexas e com grande volume de dados (`PESSOA`, `USUARIO`, `LANCAMENTO`, etc.), será criado um comando Artisan customizado (ex: `php artisan cotag:migrate-legacy-data`). Este comando será responsável por:
-    * Conectar-se ao banco de dados legado.
-    * Ler os dados das tabelas antigas.
-    * Transformar e mapear os dados para as novas estruturas de tabela e `foreign keys`.
-    * Inserir os dados no novo banco de dados Laravel, mantendo a integridade dos relacionamentos.
-    * Exibir o progresso e tratar possíveis erros durante a migração.
-
-3.  **Gestão de Senhas de Usuários:** As senhas dos operadores (`USUARIO`) não podem ser migradas devido à diferença nos algoritmos de hashing. A estratégia será:
-    * Migrar todas as contas de `USUARIO` para a nova tabela `users` com o campo `password` nulo ou com um valor inválido.
-    * Implementar um fluxo onde, na primeira tentativa de login de um usuário migrado, ele seja forçado a passar pelo processo de "Esqueci minha Senha" para definir uma nova senha segura no formato do Laravel.
-
-4.  **Dados Descartados:** Os dados das tabelas `LOG`, `REQUISICAO_SENHA`, `TOKEN`, `PESSOA_LANCAMENTO` e `hibernate_sequence` não serão migrados, pois suas funcionalidades serão substituídas por sistemas mais modernos e seguros na nova aplicação.
+*   **OU / GRUPO / USUARIO_GRUPO**: O conceito de Unidades Organizacionais e Grupos foi simplificado ou removido em favor do sistema de Roles/Permissions padrão.
+*   **MENSAGEM**: Descartada. O envio de e-mails será tratado, se necessário, por Notifications do Laravel, sem persistência em tabela de domínio.
+*   **PESSOA_LANCAMENTO**: Tabela redundante removida. A relação é direta via FK em `lancamentos`.
+*   **hibernate_sequence**: Tabela utilitária de Java/Hibernate, removida.
+*   **REQUISICAO_SENHA / TOKEN**: Funcionalidades absorvidas pelo `Laravel Breeze` (Password Reset) e `Sanctum` (Tokens).
 
 ## 5. Conclusão
 
-O mapeamento proposto fornece um caminho claro para a modernização da arquitetura de dados do CotaG. Ao manter as entidades de domínio principais e substituir funcionalidades genéricas por componentes robustos do ecossistema Laravel, a nova versão do sistema ganhará em segurança, manutenibilidade e escalabilidade. Esta estrutura de Models Eloquent servirá como a fundação para a implementação das regras de negócio e da interface do usuário na plataforma Laravel.
+Este mapeamento reflete fielmente o código-fonte atual em `app/Models` e as migrações em `database/migrations`. A padronização dos nomes de colunas (ex: `codigo_pessoa`, `nome_pessoa`) e a definição explícita de chaves primárias não-incrementais são cruciais para o funcionamento correto do Eloquent e das relações no Filament.
