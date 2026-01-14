@@ -1,37 +1,38 @@
-# Proposta de Arquitetura e Mapeamento de Lógica - Novo Sistema CotaG
+# Arquitetura de Software e Mapeamento de Lógica
 
 ## 1. Objetivo
 
-Este documento delineia a arquitetura de software para a nova versão do sistema CotaG, a ser construída sobre o **Laravel 12 USP Starter Kit**. O foco é mapear as regras de negócio identificadas na fase de análise (documento `docs/analise/03-regras-de-negocio.md`) para componentes arquiteturais específicos do Laravel, garantindo uma estrutura moderna, manutenível e testável que siga as boas práticas do framework e do nosso projeto.
+Este documento descreve a arquitetura final do sistema CotaG, construída sobre o **Laravel 12** e **FilamentPHP v4**, utilizando o padrão **TALL Stack** (Tailwind, Alpine, Laravel, Livewire). Ele detalha como as regras de negócio são implementadas tecnicamente, servindo como guia para manutenção e evolução do sistema.
 
-## 2. Princípios Arquiteturais
+## 2. Princípios Arquiteturais e Tecnologias
 
-A arquitetura seguirá os princípios fundamentais do nosso Starter Kit para garantir a qualidade e a longevidade do código:
+A arquitetura segue os princípios modernos do ecossistema Laravel:
 
-1.  **Controllers e Componentes Livewire Magros:** A camada de apresentação (Controllers e Componentes Livewire) será responsável exclusivamente por receber requisições HTTP, validar a entrada (através de Form Requests) e orquestrar as chamadas para a camada de serviço. Ela não conterá lógica de negócio.
-2.  **Lógica de Negócio em Services:** Toda a lógica de negócio complexa e reutilizável, como o cálculo de saldo e a interação com sistemas externos, será encapsulada em classes de serviço (`Services`) dedicadas. Isso promove a reutilização, facilita os testes unitários e desacopla a lógica do framework.
-3.  **Princípio da Responsabilidade Única (SRP):** Cada classe terá uma única e bem definida responsabilidade. Por exemplo, um serviço para interagir com o Replicado, outro para processar as regras de cota, e componentes Livewire para gerenciar a interface.
-4.  **Interface Administrativa com Filament:** Todas as operações de CRUD (Create, Read, Update, Delete) para as entidades de negócio (Cotas, Usuários, Papéis) serão implementadas utilizando o **Filament**, garantindo uma interface administrativa robusta, segura e de rápido desenvolvimento.
+1.  **FilamentPHP v4 como Core Administrativo**: Toda a interface de gerenciamento (CRUDs) e painéis administrativos é construída utilizando Resources do Filament. Isso garante padronização, segurança e rapidez no desenvolvimento.
+2.  **Lógica de Negócio em Services**: Regras complexas (cálculo de saldo, integração Replicado) são isoladas em classes de Serviço (`app/Services`), desacoplando a regra do framework.
+3.  **Livewire para Interatividade**: Interfaces complexas de operação (como a tela de Lançamentos) utilizam componentes Livewire dedicados, priorizando validação inline e feedback em tempo real sem excesso de JavaScript.
+4.  **Auditoria Automática**: O pacote `owen-it/laravel-auditing` é utilizado para rastrear mudanças críticas nos dados, garantindo rastreabilidade sem poluir o código de negócio.
 
-## 3. Mapeamento da Lógica de Negócio para Componentes Arquiteturais
+## 3. Mapeamento da Lógica para Componentes
 
-A tabela a seguir detalha onde cada regra de negócio do sistema CotaG será implementada na nova arquitetura Laravel, com a respectiva justificativa para a escolha de cada componente.
+A tabela abaixo conecta as regras de negócio aos componentes de software que as implementam.
 
-| Regra de Negócio | Componente Arquitetural Proposto | Justificativa |
+| Regra de Negócio | Componente Implementador | Detalhes da Implementação |
 | :--- | :--- | :--- |
-| **Cálculo de Saldo e Cota Mensal** | `App\Services\CotaService`<br>`App\Models\Pessoa::getSaldoAttribute()` | A lógica é complexa (envolve cotas especiais, vínculos e lançamentos do mês) e será reutilizada. Um **Accessor** no model `Pessoa` pode chamar o serviço para simplificar o acesso (`$pessoa->saldo`), mantendo a lógica centralizada no `CotaService`. |
-| **Validação de Lançamento de Débito/Crédito** | `App\Http\Requests\StoreLancamentoRequest` | Encapsula todas as regras de validação para a criação de um lançamento (ex: `pessoa_id` existe, `valor` é um inteiro positivo). Garante que o Controller ou Componente Livewire receba apenas dados válidos, seguindo a prática de "Controllers Magros". |
-| **Busca de Cliente no Replicado** | `App\Services\ReplicadoService` | Isola a comunicação com uma dependência externa (banco de dados Replicado), facilitando a manutenção, o cache e, crucialmente, a criação de mocks (`FakeReplicadoService`) para testes automatizados. |
-| **Interface de Lançamento** | Componente `Livewire\Lancamento\ManageLancamentos` | A interface é altamente interativa (busca de usuário, exibição dinâmica de saldo, registro de transação com feedback imediato), o que é ideal para um componente **Livewire**, eliminando a necessidade de escrever JavaScript complexo. |
-| **Gestão de Usuários, Papéis e Cotas** | **Filament Resources**:<br>`UserResource`, `RoleResource`, `CotaResource`, `CotaEspecialResource` | São tarefas administrativas clássicas de CRUD, perfeitas para a estrutura de desenvolvimento rápido e seguro que o **Filament** oferece. Isso centraliza a administração do sistema em um painel robusto e padronizado, alinhando-se com o papel do perfil `ADM`. |
-| **Renovação Mensal da Cota** | `App\Services\CotaService` e `App\Models\Lancamento` (Query Scope) | A "renovação" é uma consequência da consulta que busca lançamentos apenas do mês corrente. Essa lógica será implementada como um **Query Scope** no model `Lancamento` (ex: `scopeMesAtual()`) e utilizada pelo `CotaService` ao calcular o saldo. |
+| **Cálculo de Saldo** | `App\Services\CotaService`<br>`Pessoa::getSaldoAttribute` | O cálculo `(Cota + Créditos - Débitos)` é centralizado no método `calcularSaldo` do Service. O Model `Pessoa` expõe isso via Accessor (`$pessoa->saldo`). |
+| **Cota Base vs. Especial** | `CotaService::getCotaBase`<br>`CotaService::getCotaEspecial` | O Service arbitra a prioridade: se existir registro em `CotaEspecial`, ele prevalece sobre a cota calculada pelos vínculos (tabela `Cota`). |
+| **Validação de Lançamento** | **Livewire Component**<br>`App\Livewire\Lancamento\ManageLancamentos` | A validação de entrada (valor positivo, tipo válido) é feita via **Atributos PHP** (`#[Rule]`) diretamente nas propriedades do componente Livewire, eliminando a necessidade de FormRequests externos para esta ação. |
+| **Busca e Importação (Replicado)** | `App\Services\ReplicadoService` | Isola as queries SQL complexas ao banco legado/externo. O método `buscarPessoa` orquestra a busca local vs. remota e a sincronização dos dados para a tabela `pessoas`. |
+| **Gestão de Acessos (ACL)** | `Spatie\Permission` e `Filament User Resource` | O controle de quem é `ADM` ou `OPR` é gerido pelo pacote Spatie, com interface administrativa provida pelo `UserResource` e `RoleResource` do Filament. |
+| **Visualização de Extrato** | `App\Filament\Resources\ExtratoResource` | Recurso do Filament que fornece uma view (co-optando `Lancamento`) para listagem, filtro e exportação do histórico de lançamentos. |
 
-## 4. Estratégia de Implementação e Fluxo de Dados
+## 4. Estrutura de Diretórios Chave
 
-A interação entre os componentes seguirá um fluxo claro e desacoplado. O diagrama abaixo ilustra a principal operação do sistema: **registrar um lançamento de débito**.
-
-![Fluxo de Dados](fluxo-de-dados.svg)
+*   `app/Services/`: Contém `CotaService` e `ReplicadoService`.
+*   `app/Models/`: Contém as entidades de domínio (`Pessoa`, `Lancamento`, `Cota`, `CotaEspecial`) e configuração de Auditoria.
+*   `app/Livewire/Lancamento/`: Contém o componente `ManageLancamentos` (Lógica de UI e Validação da Operação).
+*   `app/Filament/Resources/`: Contém os CRUDs administrativos (`User`, `Role`, `Audit`, `Cota`, `Extrato`).
 
 ## 5. Conclusão
 
-Esta arquitetura baseada em `Services` e `Controllers Magros` garante uma clara separação de responsabilidades, alinhando-se com as melhores práticas do Laravel. Migrar a lógica de negócio para componentes dedicados e utilizar ferramentas como Livewire para a interatividade e Filament para a administração tornará o novo sistema CotaG significativamente mais flexível, testável e fácil de manter a longo prazo.
+Esta arquitetura favorece a manutenção ao separar claramente a **regra** (Services), a **interface** (Filament/Livewire) e os **dados** (Models). A escolha de validar regras de interface diretamente no componente Livewire simplifica o fluxo de feedback para o usuário, enquanto as regras de negócio estruturais permanecem protegidas na camada de Serviços.
