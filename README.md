@@ -63,8 +63,8 @@ O sistema já está em produção com as seguintes capacidades:
 
 1.  **Clonar o repositório:**
     ```bash
-    git clone https://github.com/ime-usp-br/CotaG.git
-    cd CotaG
+    git clone https://github.com/ime-usp-br/CotaG_L12.git
+    cd CotaG_L12
     ```
 
 2.  **Configurar o ambiente:**
