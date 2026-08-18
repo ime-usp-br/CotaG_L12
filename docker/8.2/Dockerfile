@@ -42,7 +42,7 @@ RUN apt-get update && apt-get upgrade -y \
        php8.2-msgpack php8.2-igbinary php8.2-redis php8.2-swoole \
        php8.2-memcached php8.2-pcov php8.2-xdebug php8.2-sybase \
     # Instala extensões para SQL Server
-    && pecl install pdo_sqlsrv \
+    && pecl install pdo_sqlsrv-5.12.0 \
     && echo "extension=pdo_sqlsrv.so" > /etc/php/8.2/cli/conf.d/20-pdo_sqlsrv.ini \
     && curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
