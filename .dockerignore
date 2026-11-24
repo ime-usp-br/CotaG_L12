@@ -1,0 +1,95 @@
+# =============================================================================
+# CotaG - Docker Build Context Ignore
+# =============================================================================
+# Reduz o contexto de build e evita copiar segredos/artefatos para a imagem.
+# =============================================================================
+
+# Git / CI
+.git
+.gitignore
+.gitattributes
+.github
+
+# Docker
+docker-compose*.yml
+docker-compose*.yaml
+compose*.yaml
+.dockerignore
+Dockerfile
+docker/8.2
+docker/mysql
+docker/mariadb
+docker/pgsql
+
+# Ambiente (nunca copiar segredos para a imagem)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Dependências e artefatos (instalados/gerados no build)
+node_modules/
+vendor/
+public/build/
+public/hot
+public/storage
+npm-debug.log
+yarn-error.log
+
+# Storage e caches (montados como volume em produção)
+storage/app/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+!storage/app/.gitkeep
+!storage/app/private/
+!storage/app/public/
+!storage/framework/.gitkeep
+!storage/logs/.gitkeep
+
+# Bootstrap cache
+bootstrap/cache/*
+!bootstrap/cache/.gitkeep
+
+# IDE / sistema
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testes e ferramentas de desenvolvimento
+.phpunit.result.cache
+.phpunit.cache
+phpunit.xml
+tests/
+coverage/
+phpstan.neon
+pint.json
+.editorconfig
+
+# Documentação e arquivos auxiliares
+docs/
+*.md
+!README.md
+AGENTE.md
+CLAUDE.md
+GEMINI.md
+
+# Banco local / dumps
+*.sqlite
+*.sqlite-journal
+database/*.sqlite
+*.sql
+*.backup
+*.bak
+
+# Temporários
+tmp/
+temp/
+*.tmp
+*.log

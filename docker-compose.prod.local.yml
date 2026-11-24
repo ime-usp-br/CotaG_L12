@@ -1,0 +1,55 @@
+# =============================================================================
+# CotaG - Composição LOCAL para testar a imagem de produção
+# =============================================================================
+# NÃO use este arquivo no Portainer.
+#
+# Uso:
+#   docker network create web   # uma vez, se ainda não existir
+#   docker compose -f docker-compose.prod.yml -f docker-compose.prod.local.yml up -d --build
+#   docker compose -f docker-compose.prod.yml -f docker-compose.prod.local.yml down
+#
+# O que muda em relação ao docker-compose.prod.yml:
+#   - publica a aplicação em http://localhost:${APP_PORT:-8000}
+#   - adiciona um MySQL local descartável para testes
+# O código usado é o da imagem (igual ao Portainer). Para hot reload use o Sail.
+# =============================================================================
+
+services:
+    app:
+        ports:
+            - '${APP_PORT:-8000}:80'
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+    worker:
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+    mysql:
+        image: mysql:8.0
+        container_name: cotag-mysql-local
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-secret}'
+            MYSQL_DATABASE: '${DB_DATABASE:-cotag}'
+            MYSQL_USER: '${DB_USERNAME:-cotag_user}'
+            MYSQL_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - cotag-mysql-local:/var/lib/mysql
+        networks:
+            - default
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-secret}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+        command:
+            - '--character-set-server=utf8mb4'
+            - '--collation-server=utf8mb4_unicode_ci'
+
+volumes:
+    cotag-mysql-local:
+        driver: local

@@ -119,6 +119,32 @@ O sistema já está em produção com as seguintes capacidades:
     npm run build
     ```
 
+### 5.4. Deploy em Produção (Portainer + Nginx Proxy Manager)
+
+O CotaG usa o mesmo modelo de deploy do **Nova Europa**:
+
+- `docker-compose.prod.yml` é o arquivo do stack no Portainer;
+- o container `cotag-app` roda **Nginx + PHP-FPM** e não publica portas no host;
+- app e worker entram na rede externa `web`;
+- o **Nginx Proxy Manager** faz o HTTPS e encaminha para `cotag-app:80`;
+- o banco MySQL/MariaDB é externo ao stack.
+
+Passos resumidos:
+
+1. Crie a base e o usuário no MySQL/MariaDB.
+2. No Portainer, crie um stack apontando para o repositório com
+   **Compose path** `docker-compose.prod.yml`.
+3. Configure as variáveis `APP_*`, `DB_*`, `SENHAUNICA_*` e `REPLICADO_*`
+   no stack (veja `.env.example`).
+4. No NPM, crie um Proxy Host para o seu domínio com forward para
+   `cotag-app:80` e **Websockets Support** habilitado.
+
+O guia completo (variáveis, seeders, NPM, backup e troubleshooting) está em
+[docs/DEPLOY_PORTAINER.md](./docs/DEPLOY_PORTAINER.md).
+
+> O `docker-compose.yml` original continua sendo o arquivo do Laravel Sail para
+> desenvolvimento local. Use `docker-compose.prod.yml` apenas no Portainer.
+
 ## 6. Configuração USP
 
 Para funcionamento completo, configure as seguintes variáveis no `.env`:
@@ -137,7 +163,7 @@ REPLICADO_PORT=port
 REPLICADO_DATABASE=db
 REPLICADO_USERNAME=user
 REPLICADO_PASSWORD=pass
-REPLICADO_CODUND=45
+REPLICADO_CODUNDCLG=45
 ```
 
 ## 7. Painel Administrativo

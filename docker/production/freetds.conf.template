@@ -1,0 +1,16 @@
+# FreeTDS configuration for USP Replicado
+# O entrypoint substitui os placeholders abaixo em tempo de execução.
+
+[global]
+    tds version = 7.0
+    client charset = UTF-8
+    text size = 64512
+    encryption = off
+    use ntlmv2 = yes
+
+# Configuração usada pelo driver pdo_dblib do pacote uspdev/replicado
+[replicado]
+    host = __REPLICADO_HOST__
+    port = __REPLICADO_PORT__
+    tds version = 7.0
+    encryption = off

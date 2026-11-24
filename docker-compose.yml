@@ -1,3 +1,9 @@
+# =============================================================================
+# CotaG - Desenvolvimento local (Laravel Sail)
+# =============================================================================
+# Produção / Portainer usa outro arquivo: docker-compose.prod.yml
+# Guia: docs/DEPLOY_PORTAINER.md
+# =============================================================================
 services:
     laravel.test:
         build:
