@@ -1,0 +1,89 @@
+# =============================================================================
+# CotaG - Stack isolada de testes
+# =============================================================================
+# Uso: make test
+#   ou: docker compose -f docker-compose.test.yml run --rm test
+#
+# Esta stack NAO faz parte do deploy. O banco aqui e efemero (tmpfs) e existe
+# apenas para a suite automatizada; nunca aponte para dev, homolog ou producao.
+# =============================================================================
+name: cotag-test
+
+services:
+    test:
+        build:
+            context: .
+            dockerfile: docker/production/Dockerfile
+            target: test
+        environment:
+            APP_ENV: testing
+            APP_DEBUG: 'true'
+            APP_KEY: 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+            APP_URL: 'http://localhost'
+            APP_LOCALE: pt_BR
+            APP_FALLBACK_LOCALE: pt_BR
+            APP_FAKER_LOCALE: pt_BR
+            TZ: America/Sao_Paulo
+            LOG_CHANNEL: 'null'
+            LOG_DEPRECATIONS_CHANNEL: 'null'
+            DB_CONNECTION: mysql
+            DB_HOST: test-db
+            DB_PORT: '3306'
+            DB_DATABASE: cotag_test
+            DB_USERNAME: cotag_test
+            DB_PASSWORD: cotag_test
+            CACHE_STORE: array
+            SESSION_DRIVER: array
+            QUEUE_CONNECTION: sync
+            BROADCAST_CONNECTION: 'null'
+            MAIL_MAILER: array
+            MAIL_FROM_ADDRESS: testing@example.org
+            BCRYPT_ROUNDS: '4'
+            SENHAUNICA_KEY: test_key
+            SENHAUNICA_SECRET: test_secret
+            SENHAUNICA_CALLBACK_ID: test_callback
+            REPLICADO_HOST: ''
+            REPLICADO_PORT: '1433'
+            REPLICADO_DATABASE: replicado
+            REPLICADO_USERNAME: ''
+            REPLICADO_PASSWORD: ''
+        depends_on:
+            test-db:
+                condition: service_healthy
+        networks:
+            - test
+        command: ['php', 'artisan', 'test']
+
+    test-db:
+        image: 'mysql:8.0'
+        environment:
+            MYSQL_ROOT_PASSWORD: cotag_test_root
+            MYSQL_DATABASE: cotag_test
+            MYSQL_USER: cotag_test
+            MYSQL_PASSWORD: cotag_test
+        command:
+            - '--character-set-server=utf8mb4'
+            - '--collation-server=utf8mb4_unicode_ci'
+        tmpfs:
+            - /var/lib/mysql
+        networks:
+            - test
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 20s
+
+networks:
+    test:
+        internal: true
+        # Subnet fixa para funcionar em hosts com o pool Docker esgotado.
+        # Ajuste se conflitar com outra rede do host.
+        ipam:
+            config:
+                - subnet: 10.250.89.0/24

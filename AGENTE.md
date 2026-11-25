@@ -272,17 +272,19 @@ gh issue view <ID> --json title,body
 ## 9. Comandos Úteis
 
 ```bash
-# Iniciar ambiente (Sail)
-./vendor/bin/sail up -d
+# Subir a stack única (app + worker)
+make up
 
 # Formatar código
-./vendor/bin/sail bin pint
+vendor/bin/pint
 
-# Rodar testes
-./vendor/bin/sail artisan test
+# Rodar testes na stack isolada
+make test
 
 # Criar usuário Filament
-./vendor/bin/sail artisan make:filament-user
+docker compose exec app php artisan make:filament-user
+
+# Deploy: ver docs/deploy/README.md
 ```
 
 ---

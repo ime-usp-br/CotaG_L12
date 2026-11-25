@@ -47,6 +47,7 @@ RUN echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries \
     && chmod +x /usr/local/bin/install-php-extensions \
     && install-php-extensions \
         pdo_mysql \
+        pdo_sqlite \
         intl \
         gd \
         zip \
@@ -85,7 +86,21 @@ RUN npm ci --production=false \
     && composer dump-autoload --optimize --no-dev
 
 # =============================================================================
-# STAGE 2: runtime (Nginx + PHP-FPM no mesmo container)
+# STAGE 2: testes (usado somente por docker-compose.test.yml)
+# =============================================================================
+FROM builder AS test
+
+# Reinstala dependencias de desenvolvimento e executa a suite isolada.
+RUN composer install \
+        --no-interaction \
+        --no-progress \
+        --prefer-dist \
+        --optimize-autoloader
+
+CMD ["php", "artisan", "test"]
+
+# =============================================================================
+# STAGE 3: runtime (Nginx + PHP-FPM no mesmo container)
 # =============================================================================
 FROM php:8.2-fpm
 
@@ -107,6 +122,8 @@ RUN apt-get update -o Acquire::Retries=10 && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         curl \
         ca-certificates \
+        default-mysql-client \
+        postgresql-client \
         zip \
         unzip \
         supervisor \
@@ -146,10 +163,7 @@ RUN for i in 1 2 3; do \
         pdo_sqlsrv \
     && docker-php-ext-install pdo_dblib
 
-# Composer (necessário apenas para bind-mount de desenvolvimento)
-RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Ajusta UID/GID do www-data para casar com o host (volume ./storage)
+# Ajusta UID/GID do www-data para casar com o host (volume nomeado de storage)
 RUN if getent group $WWWGROUP > /dev/null 2>&1; then \
         echo "Group $WWWGROUP already exists"; \
     else \
@@ -165,8 +179,16 @@ RUN if getent group $WWWGROUP > /dev/null 2>&1; then \
 # Código compilado no stage anterior
 COPY --from=builder --chown=www-data:www-data /build /var/www/html
 
+# O runtime nao leva testes nem arquivos de ambiente de teste
+RUN rm -rf \
+        /var/www/html/tests \
+        /var/www/html/phpunit.xml \
+        /var/www/html/.env.testing \
+        /var/www/html/.env.dusk.ci \
+        /var/www/html/.env.dusk.local
+
 # Configurações de runtime
-COPY docker/production/nginx.conf /etc/nginx/nginx.conf
+COPY docker/production/nginx.conf /etc/nginx/nginx.conf.template
 COPY docker/production/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/production/supervisord.worker.conf /etc/supervisor/conf.d/supervisord.worker.conf
 COPY docker/production/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
@@ -174,7 +196,7 @@ COPY docker/production/php.ini /usr/local/etc/php/conf.d/99-production.ini
 COPY docker/production/freetds.conf.template /etc/freetds/freetds.conf.template
 COPY docker/production/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/entrypoint.sh \
+RUN chmod +x /usr/local/bin/entrypoint.sh /var/www/html/scripts/*.sh \
     && mkdir -p \
         storage/framework/cache \
         storage/framework/cache/data \
@@ -187,6 +209,13 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-EXPOSE 80
+ENV WEB_PORT=8080
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=5 \
+    CMD ["/var/www/html/scripts/healthcheck.sh"]
+
+STOPSIGNAL SIGTERM
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

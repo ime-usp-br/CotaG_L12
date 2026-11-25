@@ -1,5 +1,15 @@
 <?php
 
+$deployEnv = env('APP_ENV', 'production');
+
+$nativeEnv = match ($deployEnv) {
+    'dev' => 'local',
+    'homolog', 'prod' => 'production',
+    default => $deployEnv,
+};
+
+$appEnv = env('APP_ENV_NATIVE') ?: $nativeEnv;
+
 return [
 
     /*
@@ -26,7 +36,7 @@ return [
     |
     */
 
-    'env' => env('APP_ENV', 'production'),
+    'env' => $appEnv,
 
     /*
     |--------------------------------------------------------------------------

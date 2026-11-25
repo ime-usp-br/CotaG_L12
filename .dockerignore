@@ -22,10 +22,14 @@ docker/mariadb
 docker/pgsql
 
 # Ambiente (nunca copiar segredos para a imagem)
+# .env.testing/.env.dusk.* sao necessarios apenas ao stage de testes;
+# o stage de runtime remove esses arquivos antes da imagem final.
 .env
 .env.*
 !.env.example
-!.env.production.example
+!.env.testing
+!.env.dusk.ci
+!.env.dusk.local
 
 # Dependências e artefatos (instalados/gerados no build)
 node_modules/
@@ -43,8 +47,13 @@ storage/framework/sessions/*
 storage/framework/views/*
 storage/logs/*
 !storage/app/.gitkeep
+!storage/app/.gitignore
 !storage/app/private/
 !storage/app/public/
+storage/app/private/*
+!storage/app/private/.gitignore
+storage/app/public/*
+!storage/app/public/.gitignore
 !storage/framework/.gitkeep
 !storage/logs/.gitkeep
 
@@ -63,10 +72,10 @@ bootstrap/cache/*
 Thumbs.db
 
 # Testes e ferramentas de desenvolvimento
+# tests/ e phpunit.xml entram no contexto para o stage de testes;
+# o stage de runtime remove os dois antes da imagem final.
 .phpunit.result.cache
 .phpunit.cache
-phpunit.xml
-tests/
 coverage/
 phpstan.neon
 pint.json
@@ -80,11 +89,15 @@ AGENTE.md
 CLAUDE.md
 GEMINI.md
 
-# Banco local / dumps
+# Banco local / dumps / backups do projeto
 *.sqlite
 *.sqlite-journal
 database/*.sqlite
 *.sql
+*.sql.gz
+*.sha256
+backups/
+.deploy-backup/
 *.backup
 *.bak
 

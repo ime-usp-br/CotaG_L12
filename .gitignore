@@ -11,6 +11,10 @@
 /vendor
 .env
 .env.backup
+.env.dev
+.env.homolog
+.env.homologacao
+.env.staging
 .env.production
 .env.prod
 .env.prod.local
@@ -21,6 +25,10 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+/backups/
+*.sql.gz
+*.sql.gz.sha256
+/.deploy-backup/
 /auth.json
 /.fleet
 /.idea

@@ -1,134 +1,220 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
 # CotaG - Container entrypoint (app e worker)
 # =============================================================================
 # Responsabilidades:
+#   - validar CONTAINER_ROLE, APP_ENV e WEB_PORT
 #   - configurar FreeTDS para o Replicado
-#   - garantir diretórios/permissões do storage
-#   - obter/gerar APP_KEY persistente
-#   - aguardar o banco de dados
-#   - rodar migrations (somente no container app)
-#   - otimizar caches (somente no container app)
+#   - preparar storage, Nginx e permissoes
+#   - obter/gerar APP_KEY persistente (somente no app)
+#   - resolver o banco externo por dominio e aguardar disponibilidade
+#   - rodar migrations/seeders/caches somente no app
 #   - iniciar Nginx + PHP-FPM (app) ou queue worker (worker)
+#   - fazer drop de privilegios para www-data via gosu
 # =============================================================================
 
-set -e
+set -Eeuo pipefail
 
 ROLE="${CONTAINER_ROLE:-app}"
-echo "🚀 Starting CotaG container (role: ${ROLE})..."
+APP_ENV_VALUE="${APP_ENV:-}"
+WEB_PORT_VALUE="${WEB_PORT:-8080}"
+APP_ROOT="/var/www/html"
+SUPERVISOR_CONF="/etc/supervisor/conf.d/supervisord.conf"
+
+log() {
+    printf '%s\n' "$*"
+}
+
+fail() {
+    printf 'ERRO: %s\n' "$*" >&2
+    exit 1
+}
+
+case "$ROLE" in
+    app|worker)
+        ;;
+    *)
+        fail "CONTAINER_ROLE invalido: ${ROLE}. Use app ou worker."
+        ;;
+esac
+
+case "$APP_ENV_VALUE" in
+    dev|homolog|prod|local|production|staging)
+        ;;
+    '')
+        fail "APP_ENV nao definido. Use dev, homolog ou prod."
+        ;;
+    *)
+        fail "APP_ENV invalido: ${APP_ENV_VALUE}. Use dev, homolog ou prod."
+        ;;
+esac
+
+if ! [[ "$WEB_PORT_VALUE" =~ ^[0-9]+$ ]] || (( WEB_PORT_VALUE < 1 || WEB_PORT_VALUE > 65535 )); then
+    fail "WEB_PORT invalido: ${WEB_PORT_VALUE}."
+fi
+
+if [[ "$ROLE" == "worker" ]]; then
+    SUPERVISOR_CONF="/etc/supervisor/conf.d/supervisord.worker.conf"
+fi
+
+log "Iniciando CotaG (role=${ROLE}, APP_ENV=${APP_ENV_VALUE}, WEB_PORT=${WEB_PORT_VALUE})."
 
 # -----------------------------------------------------------------------------
 # FreeTDS (Replicado)
 # -----------------------------------------------------------------------------
-echo "🔧 Configuring FreeTDS for Replicado..."
 REPLICADO_HOST_VAL="${REPLICADO_HOST:-localhost}"
 REPLICADO_PORT_VAL="${REPLICADO_PORT:-1433}"
 
-sed -e "s/__REPLICADO_HOST__/${REPLICADO_HOST_VAL}/g" \
-    -e "s/__REPLICADO_PORT__/${REPLICADO_PORT_VAL}/g" \
-    /etc/freetds/freetds.conf.template > /etc/freetds/freetds.conf
-
-echo "✅ FreeTDS configured: ${REPLICADO_HOST_VAL}:${REPLICADO_PORT_VAL}"
+if [[ -f /etc/freetds/freetds.conf.template ]]; then
+    sed -e "s/__REPLICADO_HOST__/${REPLICADO_HOST_VAL}/g" \
+        -e "s/__REPLICADO_PORT__/${REPLICADO_PORT_VAL}/g" \
+        /etc/freetds/freetds.conf.template > /etc/freetds/freetds.conf
+    log "FreeTDS configurado para ${REPLICADO_HOST_VAL}:${REPLICADO_PORT_VAL}."
+fi
 
 # -----------------------------------------------------------------------------
-# Storage
+# Storage, Nginx e permissoes
 # -----------------------------------------------------------------------------
-echo "📁 Setting up storage directories..."
-mkdir -p storage/framework/{cache,sessions,views}
-mkdir -p storage/framework/cache/data
-mkdir -p storage/logs
-mkdir -p storage/app/private
-mkdir -p storage/app/public
-mkdir -p bootstrap/cache
+log "Preparando diretorios de runtime..."
+mkdir -p \
+    "$APP_ROOT/storage/framework/cache" \
+    "$APP_ROOT/storage/framework/cache/data" \
+    "$APP_ROOT/storage/framework/sessions" \
+    "$APP_ROOT/storage/framework/views" \
+    "$APP_ROOT/storage/logs" \
+    "$APP_ROOT/storage/app/private" \
+    "$APP_ROOT/storage/app/public" \
+    "$APP_ROOT/storage/backups" \
+    "$APP_ROOT/bootstrap/cache" \
+    /tmp/nginx/client_body \
+    /tmp/nginx/proxy \
+    /tmp/nginx/fastcgi \
+    /tmp/nginx/uwsgi \
+    /tmp/nginx/scgi
 
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+if [[ -f /etc/nginx/nginx.conf.template ]]; then
+    sed "s/__WEB_PORT__/${WEB_PORT_VALUE}/g" \
+        /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+fi
 
-# Dependências (apenas no cenário de bind-mount de desenvolvimento)
-if [ ! -d vendor ]; then
-    echo "📦 Installing Composer dependencies..."
-    composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+if [[ "$ROLE" == "app" ]]; then
+    nginx -t
+    php-fpm -t
+fi
+
+if [[ "$(id -u)" -eq 0 ]]; then
+    chown -R www-data:www-data \
+        "$APP_ROOT/storage" \
+        "$APP_ROOT/bootstrap/cache" \
+        /tmp/nginx
+    chmod -R 775 "$APP_ROOT/storage" "$APP_ROOT/bootstrap/cache"
+fi
+
+# A imagem de runtime deve conter as dependencias; nao instalamos Composer
+# em producao nem dependemos de bind mount de codigo.
+if [[ ! -d "$APP_ROOT/vendor" ]]; then
+    fail "vendor ausente em ${APP_ROOT}. Construa a imagem novamente; o runtime nao instala dependencias."
 fi
 
 # -----------------------------------------------------------------------------
 # APP_KEY
 # -----------------------------------------------------------------------------
-# Em produção prefira definir APP_KEY nas variáveis do stack (Portainer).
-# Quando ausente, geramos e persistimos em storage/app/app_key para que app e
-# worker compartilhem a mesma chave.
-KEY_FILE=/var/www/html/storage/app/app_key
+KEY_FILE="$APP_ROOT/storage/app/app_key"
 
-if [ -z "${APP_KEY:-}" ] || ! printf '%s' "$APP_KEY" | grep -q '^base64:'; then
-    echo "🔑 APP_KEY ausente ou inválida, obtendo/gerando..."
+if [[ -z "${APP_KEY:-}" ]] || ! printf '%s' "${APP_KEY:-}" | grep -q '^base64:'; then
+    log "APP_KEY ausente ou invalida; obtendo/gerando chave persistente."
 
-    if [ "$ROLE" = "worker" ]; then
-        for i in $(seq 1 60); do
-            [ -f "$KEY_FILE" ] && break
+    if [[ "$ROLE" == "worker" ]]; then
+        for _ in $(seq 1 60); do
+            [[ -f "$KEY_FILE" ]] && break
             sleep 2
         done
-    fi
 
-    if [ -f "$KEY_FILE" ]; then
+        [[ -f "$KEY_FILE" ]] || fail "APP_KEY ausente e o app ainda nao gerou ${KEY_FILE}."
         APP_KEY="$(cat "$KEY_FILE")"
     else
-        APP_KEY="$(php artisan key:generate --show --no-ansi)"
-        printf '%s\n' "$APP_KEY" > "$KEY_FILE"
-        chown www-data:www-data "$KEY_FILE"
-        chmod 600 "$KEY_FILE"
+        if [[ -f "$KEY_FILE" ]]; then
+            APP_KEY="$(cat "$KEY_FILE")"
+        else
+            APP_KEY="$(php artisan key:generate --show --no-ansi)"
+            printf '%s\n' "$APP_KEY" > "$KEY_FILE"
+            if [[ "$(id -u)" -eq 0 ]]; then
+                chown www-data:www-data "$KEY_FILE"
+            fi
+            chmod 600 "$KEY_FILE"
+        fi
     fi
 
     export APP_KEY
-    echo "✅ APP_KEY definida (persistida em ${KEY_FILE})"
+    log "APP_KEY definida a partir de ${KEY_FILE}."
 fi
 
 # -----------------------------------------------------------------------------
-# Banco de dados
+# Banco externo por dominio
 # -----------------------------------------------------------------------------
-echo "⏳ Waiting for database..."
-attempt=0
-until php artisan db:show > /dev/null 2>&1; do
-    attempt=$((attempt + 1))
-    if [ "$attempt" -ge 60 ]; then
-        echo "❌ Banco de dados inacessível após 120s. Verifique DB_* no stack." >&2
-        exit 1
-    fi
-    sleep 2
-done
-echo "✅ Database is ready!"
+# shellcheck source=/dev/null
+source "$APP_ROOT/scripts/lib-db.sh"
+
+db_load_env
+db_validate_required
+db_require_credentials
+
+log "Banco externo: ${DB_HOST}:${DB_PORT}/${DB_DATABASE}."
+
+"$APP_ROOT/scripts/wait-for-db.sh"
 
 # -----------------------------------------------------------------------------
-# Inicialização da aplicação (somente no container app)
+# Inicializacao da aplicacao (somente no container app)
 # -----------------------------------------------------------------------------
-if [ "$ROLE" = "app" ]; then
-    if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
-        echo "🔧 Running migrations..."
+if [[ "$ROLE" == "app" ]]; then
+    if [[ "${RUN_MIGRATIONS:-true}" == "true" ]]; then
+        log "Rodando migrations..."
         php artisan migrate --force --no-interaction
     else
-        echo "⏭️  Migrations desabilitadas (RUN_MIGRATIONS=${RUN_MIGRATIONS:-true})"
+        log "Migrations desabilitadas (RUN_MIGRATIONS=${RUN_MIGRATIONS:-true})."
     fi
 
-    if [ "${RUN_SEEDERS:-false}" = "true" ]; then
-        echo "🌱 Running seeders..."
-        php artisan db:seed --force --no-interaction || echo "⚠️  Seeding failed"
+    if [[ "${RUN_SEEDERS:-false}" == "true" ]]; then
+        case "$APP_ENV_VALUE" in
+            prod|production|staging)
+                fail "RUN_SEEDERS=true nao e permitido em APP_ENV=${APP_ENV_VALUE}."
+                ;;
+            *)
+                log "Rodando seeders..."
+                php artisan db:seed --force --no-interaction
+                ;;
+        esac
     fi
 
-    if [ "${APP_ENV:-production}" = "production" ]; then
-        echo "⚡ Optimizing application..."
-        # route:cache não é usado: routes/web.php possui closures.
-        php artisan view:clear || true
-        php artisan view:cache || true
-        php artisan filament:optimize || true
+    if [[ "${WARM_CACHE:-true}" == "true" ]]; then
+        case "$APP_ENV_VALUE" in
+            dev|local)
+                log "Warm cache ignorado em APP_ENV=${APP_ENV_VALUE}."
+                ;;
+            *)
+                log "Aquecendo caches..."
+                php artisan config:cache
+                php artisan view:cache
+                php artisan filament:optimize || true
+                ;;
+        esac
     else
-        echo "⚡ Skipping optimizations (APP_ENV=${APP_ENV:-production})"
+        log "Warm cache desabilitado; limpando caches de config/view."
+        php artisan config:clear || true
+        php artisan view:clear || true
     fi
 
-    chown -R www-data:www-data storage bootstrap/cache
+    php artisan storage:link || true
+
+    if [[ "$(id -u)" -eq 0 ]]; then
+        chown -R www-data:www-data "$APP_ROOT/storage" "$APP_ROOT/bootstrap/cache"
+        chmod -R 775 "$APP_ROOT/storage" "$APP_ROOT/bootstrap/cache"
+    fi
 fi
 
-echo "✨ Container ready! Starting services..."
+log "Container pronto; iniciando servicos."
 
-if [ "$ROLE" = "worker" ]; then
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.worker.conf
-fi
-
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# O PID 1 (supervisord) e os masters de nginx/php-fpm permanecem como root para
+# abrir os pipes de log e portas internas. Os workers de nginx/php-fpm e o
+# queue worker rodam como www-data (user=www-data nos arquivos de configuracao).
+exec /usr/bin/supervisord -c "$SUPERVISOR_CONF"

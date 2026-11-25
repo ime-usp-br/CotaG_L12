@@ -56,10 +56,11 @@ O sistema já está em produção com as seguintes capacidades:
 ## 5. Instalação
 
 ### 5.1. Pré-requisitos
-*   Docker & Docker Compose (Recomendado via Laravel Sail)
-*   OU PHP 8.2+, Composer, Node.js e MySQL.
+*   Docker e Docker Compose v2 (recomendado); OU PHP 8.2+, Composer, Node.js e MySQL.
+*   Para o ambiente Docker, um banco externo acessível por domínio (dev) e a rede externa `web` do NPM/Portainer.
+*   O compose de deploy não sobe banco local: veja `docs/deploy/README.md`.
 
-### 5.2. Instalação com Laravel Sail (Recomendado)
+### 5.2. Instalação com Docker (stack única)
 
 1.  **Clonar o repositório:**
     ```bash
@@ -67,25 +68,35 @@ O sistema já está em produção com as seguintes capacidades:
     cd CotaG_L12
     ```
 
-2.  **Configurar o ambiente:**
+2.  **Configurar o ambiente local:**
     ```bash
     cp .env.example .env
     ```
-    Edite o `.env` e configure as credenciais do banco de dados e as chaves da USP (veja a seção 6).
+    Edite o `.env` com o domínio do banco de dev, `APP_KEY`, credenciais USP e
+    demais variáveis. O `.env` local é opcional e não é usado no Portainer.
 
-3.  **Subir os containers:**
+3.  **Criar a rede externa (uma vez) e subir a stack:**
     ```bash
-    ./vendor/bin/sail up -d
+    docker network create web
+    make up
     ```
 
-4.  **Instalar dependências e preparar o banco:**
+4.  **Preparar a aplicação:**
     ```bash
-    ./vendor/bin/sail composer install
-    ./vendor/bin/sail npm install
-    ./vendor/bin/sail npm run build
-    ./vendor/bin/sail artisan key:generate
-    ./vendor/bin/sail artisan migrate --seed
+    make migrate
     ```
+    Em dev, `RUN_SEEDERS=true` faz o entrypoint rodar os seeders no boot. Use
+    `make seed` apenas para reexecutar seeders manualmente (dev/homologação).
+
+5.  **Validar:**
+    ```bash
+    make health
+    make logs
+    ```
+
+> O `docker-compose.yml` é a stack única de dev, homologação e produção. Os
+> arquivos antigos de Sail/produção foram arquivados em
+> `docs/deploy/_legacy/` e não fazem parte do contrato.
 
 ### 5.3. Instalação Tradicional (Sem Docker)
 
@@ -121,29 +132,30 @@ O sistema já está em produção com as seguintes capacidades:
 
 ### 5.4. Deploy em Produção (Portainer + Nginx Proxy Manager)
 
-O CotaG usa o mesmo modelo de deploy do **Nova Europa**:
+O CotaG usa uma stack única para dev, homologação e produção:
 
-- `docker-compose.prod.yml` é o arquivo do stack no Portainer;
-- o container `cotag-app` roda **Nginx + PHP-FPM** e não publica portas no host;
-- app e worker entram na rede externa `web`;
-- o **Nginx Proxy Manager** faz o HTTPS e encaminha para `cotag-app:80`;
-- o banco MySQL/MariaDB é externo ao stack.
+- `docker-compose.yml` é o arquivo do stack no Portainer;
+- o serviço `app` roda **Nginx + PHP-FPM** e não publica portas no host;
+- o `worker` usa a mesma imagem, sem rede `web`, sem migrations e sem seeders;
+- app e NPM compartilham a rede externa `web`, com alias `cotag-<env>-web`;
+- o **Nginx Proxy Manager** faz o HTTPS e encaminha para
+  `http://cotag-<env>-web:8080`;
+- o banco MySQL/MariaDB/PostgreSQL é externo, acessado por domínio
+  (`DB_HOST`), fora da rede Docker da aplicação.
 
 Passos resumidos:
 
-1. Crie a base e o usuário no MySQL/MariaDB.
-2. No Portainer, crie um stack apontando para o repositório com
-   **Compose path** `docker-compose.prod.yml`.
-3. Configure as variáveis `APP_*`, `DB_*`, `SENHAUNICA_*` e `REPLICADO_*`
-   no stack (veja `.env.example`).
-4. No NPM, crie um Proxy Host para o seu domínio com forward para
-   `cotag-app:80` e **Websockets Support** habilitado.
+1. Solicite à infraestrutura o banco, usuário, permissões e DNS do ambiente.
+2. No Portainer, crie a stack `cotag-<env>` apontando para o repositório com
+   **Compose path** `docker-compose.yml`.
+3. Copie as variáveis de `.env.example` para o campo de variáveis da stack e
+   preencha os valores do ambiente (sem subir `.env` no servidor).
+4. No NPM, crie um Proxy Host para o domínio do ambiente com forward para
+   `cotag-<env>-web:8080` e **Websockets Support** habilitado.
 
-O guia completo (variáveis, seeders, NPM, backup e troubleshooting) está em
-[docs/DEPLOY_PORTAINER.md](./docs/DEPLOY_PORTAINER.md).
-
-> O `docker-compose.yml` original continua sendo o arquivo do Laravel Sail para
-> desenvolvimento local. Use `docker-compose.prod.yml` apenas no Portainer.
+O guia completo (variáveis, banco externo, NPM, migrations, backup, cutover e
+troubleshooting) está em
+[docs/deploy/README.md](./docs/deploy/README.md).
 
 ## 6. Configuração USP
 
@@ -178,10 +190,10 @@ Se você acabou de instalar o sistema, precisará criar um usuário com acesso a
 
 1.  **Via Terminal (Interactive):**
     ```bash
-    # Se estiver usando Sail (prefixe com wsl se estiver no Windows/WSL)
-    ./vendor/bin/sail artisan make:filament-user
-    
-    # Se estiver usando PHP local
+    # Com Docker (stack única)
+    docker compose exec app php artisan make:filament-user
+
+    # Ou com PHP local
     php artisan make:filament-user
     ```
     Siga as instruções para definir nome, e-mail e senha.
@@ -189,7 +201,7 @@ Se você acabou de instalar o sistema, precisará criar um usuário com acesso a
 2.  **Atribuindo Permissões (Se necessário):**
     O comando acima já cria um usuário apto a logar no Filament. Caso precise atribuir a role `ADM` explicitamente a um usuário existente:
     ```bash
-    ./vendor/bin/sail artisan tinker
+    docker compose exec app php artisan tinker
     ```
     ```php
     $user = \App\Models\User::where('email', 'seu-email@usp.br')->first();
@@ -201,21 +213,25 @@ Se você acabou de instalar o sistema, precisará criar um usuário com acesso a
 Este projeto inclui ferramentas para manter a qualidade e consistência do código:
 
 *   **Laravel Pint:** Formatador de código automático (PSR-12).
-    *   Para formatar: `./vendor/bin/sail bin pint`
+    *   Para formatar: `vendor/bin/pint`
 *   **Larastan (PHPStan):** Análise estática para encontrar erros.
-    *   Para analisar: `./vendor/bin/sail bin phpstan analyse`
+    *   Para analisar: `vendor/bin/phpstan analyse`
 *   **EditorConfig:** Padronização de configurações do editor (indentação, linhas, etc).
 
 ## 9. Testes
 
 *   **Executando Testes PHPUnit (Unitários e Feature):**
     ```bash
-    ./vendor/bin/sail artisan test
+    make test
+    # ou, diretamente:
+    docker compose -f docker-compose.test.yml run --rm test
     ```
+    A stack de teste usa um MySQL efêmero em `tmpfs` e não toca no banco de
+    dev, homologação ou produção.
 *   **Executando Testes Dusk (Browser / End-to-End):**
-    É necessário criar o arquivo `.env.dusk.local`.
+    É necessário criar o arquivo `.env.dusk.local` e ter um Selenium acessível.
     ```bash
-    ./vendor/bin/sail artisan dusk
+    php artisan dusk
     ```
 
 ## 10. Documentação
@@ -226,6 +242,7 @@ A documentação detalhada do projeto encontra-se na pasta `docs/` e na Wiki:
 *   [Guia de Desenvolvimento](./docs/guia_de_desenvolvimento.md)
 *   [Padrões de Código e Boas Práticas](./docs/padroes_codigo_boas_praticas.md)
 *   [Arquitetura e Lógica do Sistema](./docs/arquitetura/02-mapeamento-logica-arquitetura.md)
+*   [Deploy (Portainer + NPM)](./docs/deploy/README.md)
 
 ## 11. Como Contribuir
 
